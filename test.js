@@ -9,6 +9,7 @@ const funInfo = {
   funName: '/api.site.Site/GetUserByUserId',
   reqPath: 'api.site.GetUserByUserIdRequest',
   resPath: 'api.site.GetUserByUserIdResponse',
+  pbRootPath: './proto3'
 };
 
 const cmdhInfo = {
@@ -19,7 +20,7 @@ const cmdhInfo = {
 };
 
 async function main() {
-  const res = await sendGrpc(funInfo, cmdhInfo, { userId: 3700770 });
+  const res = await sendGrpc(funInfo, cmdhInfo, { userId: 3701064 });
   console.log(res);
 }
 
