@@ -10,8 +10,7 @@ const MSB = 0x80;
 const REST = 0x7f;
 const MSBALL = ~REST;
 
-const pbRootPathDefault = "./node_modules/@sec-rc/cmdh-node-sdk/proto3";
-let clientGrpc, pbRoot;
+let clientGrpc, pbRoot = {};
 
 /**
  * pb项目目录，所有使用的请求主目录
@@ -102,9 +101,11 @@ function getCmdhSign(params, base64secret) {
   return sign;
 }
 
-function initClientGrpc(cmdhInfo) {
+function initClientGrpc(cmdhInfo, funInfo) {
   const { hostGrpc, pbRootPath = pbRootPathDefault } = cmdhInfo;
-  const protoPath = path.join(process.cwd(), pbRootPath);
+  const { pbRootPath: funPbRootPath } = funInfo;
+  const cmdhPbPath = path.join(process.cwd(), pbRootPath);
+  const funPbPath = path.join(process.cwd(), funPbRootPath);
   if (!clientGrpc) {
     const protoCmdPath = path.join(
       process.cwd(),
@@ -116,7 +117,7 @@ function initClientGrpc(cmdhInfo) {
       enums: String,
       defaults: true,
       oneofs: true,
-      includeDirs: [protoPath],
+      includeDirs: [pbRootPath],
     };
     const packageDefinition = protoLoader.loadSync(protoCmdPath, options);
     const commandProto = grpc.loadPackageDefinition(packageDefinition);
@@ -130,10 +131,19 @@ function initClientGrpc(cmdhInfo) {
     );
   }
 
-  if (!pbRoot) {
+  if (!pbRoot['cmdh']) {
     // 项目下所有的pb转换为pb树
-    pbRoot = protobuf.loadSync(getFiles(protoPath));
+    pbRoot['cmdh'] = protobuf.loadSync(getFiles(cmdhPbPath));
   }
+  if (!pbRoot[funInfo.funName]) {
+    // 项目下所有的pb转换为pb树
+    const res = getFiles(funPbPath);
+    pbRoot[funInfo.funName] = protobuf.loadSync(res);
+  }
+
+
+
+  console.log('------------------')
 }
 
 /**
@@ -146,9 +156,9 @@ function initClientGrpc(cmdhInfo) {
 async function sendGrpc(funInfo, cmdhInfo, payload) {
   const { hostGrpc, appname, secret } = cmdhInfo;
   // init
-  initClientGrpc(cmdhInfo);
-  const ReqObject = pbRoot.lookupType(funInfo.reqPath);
-  const ResObject = pbRoot.lookupType(funInfo.resPath);
+  await initClientGrpc(cmdhInfo, funInfo);
+  const ReqObject = pbRoot[funInfo.funName].lookupType(funInfo.reqPath);
+  const ResObject = pbRoot[funInfo.funName].lookupType(funInfo.resPath);
   const user = ReqObject.encode(payload).finish();
 
   let d = Date.now();
@@ -169,12 +179,6 @@ async function sendGrpc(funInfo, cmdhInfo, payload) {
   };
 
   const sign = getCmdhSign(data, secret);
-  // if (!clientGrpc) {
-  //   clientGrpc = new commandProto.cmd.Commander(
-  //     hostGrpc,
-  //     grpc.credentials.createInsecure()
-  //   );
-  // }
   const meta = new grpc.Metadata();
   meta.add("signature", sign);
 

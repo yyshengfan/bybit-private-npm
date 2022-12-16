@@ -21,7 +21,7 @@ const cmdhInfo = {
 
 async function main() {
   let i = 0;
-  while( i < 10000) {
+  while( i < 1) {
     const res = await sendGrpc(funInfo, cmdhInfo, { userId: 3701064 });
     console.log(res);
     i++
