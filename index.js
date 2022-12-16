@@ -122,7 +122,11 @@ function initClientGrpc(cmdhInfo) {
     const commandProto = grpc.loadPackageDefinition(packageDefinition);
     clientGrpc = new commandProto.cmd.Commander(
       hostGrpc,
-      grpc.credentials.createInsecure()
+      grpc.credentials.createInsecure(),
+      {
+        keepalive_time_ms: 2 * 60 * 60 * 1000,
+        keepalive_timeout_ms: 60 * 1000,
+      }
     );
   }
 
@@ -165,12 +169,12 @@ async function sendGrpc(funInfo, cmdhInfo, payload) {
   };
 
   const sign = getCmdhSign(data, secret);
-  if (!clientGrpc) {
-    clientGrpc = new commandProto.cmd.Commander(
-      hostGrpc,
-      grpc.credentials.createInsecure()
-    );
-  }
+  // if (!clientGrpc) {
+  //   clientGrpc = new commandProto.cmd.Commander(
+  //     hostGrpc,
+  //     grpc.credentials.createInsecure()
+  //   );
+  // }
   const meta = new grpc.Metadata();
   meta.add("signature", sign);
 

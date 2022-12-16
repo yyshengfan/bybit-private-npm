@@ -1,3 +1,0 @@
-[submodule "proto3"]
-	path = proto3
-	url = git@git.bybit.com:svc/proto3.git

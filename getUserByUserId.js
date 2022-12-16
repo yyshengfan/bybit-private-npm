@@ -13,15 +13,20 @@ const funInfo = {
 };
 
 const cmdhInfo = {
-  hostGrpc: 'command-hub-service-wl-test-1.test.efficiency.ww5sawfyut0k.bitsvc.io:9090',
+  hostGrpc: 'command-hub-service-wl-test-2.tke-test2.efficiency.ww5sawfyut0k.bitsvc.io:9090',
   appname: 'piidebug',
   secret: 'Zys4bjBLVjJDQytwaXJXcXc4aUxiSkdrb2JJeVgxQU9BSFRERWRnM1JMMD0=',
   pbRootPath: './proto3',
 };
 
 async function main() {
-  const res = await sendGrpc(funInfo, cmdhInfo, { userId: 3701064 });
-  console.log(res);
+  let i = 0;
+  while( i < 10000) {
+    const res = await sendGrpc(funInfo, cmdhInfo, { userId: 3701064 });
+    console.log(res);
+    i++
+  }
+
 }
 
 main();
