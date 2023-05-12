@@ -1,0 +1,426 @@
+syntax = "proto3";
+package bybit.assetwithdraw.withdraw.inner.v1;
+
+option go_package = "code.bydev.io/cht/asset/withdraw-stub.git/pkg/bybit/assetwithdraw/withdraw/inner/v1";
+import "proto3/api/asset/assetWithdraw/enums.proto";
+import "google/protobuf/timestamp.proto";
+
+// 统计个人的提币总额.
+message GetStatisticsPersonalTotalAmountReq {
+  int32 broker_id = 1; // 站点id.
+  repeated int64 user_ids = 2;
+  string status = 3;
+  int64 submited_at_begin = 4; // 起始提交时间.
+  int64 submited_at_end = 5; // 最后提交时间.
+  optional string coin = 6; // 币种, 选填.
+}
+
+message GetStatisticsPersonalTotalAmountResp {
+  int32 code = 1;
+  string message = 2;
+  repeated GetStatisticsPersonalTotalAmountItem data = 3;
+}
+
+message GetStatisticsPersonalTotalAmountItem {
+  int64 user_id = 1;
+  string coin = 2;
+  string amount = 3;
+  string status = 4;
+  int64 total_num = 5;
+}
+
+// 通过条件查询withdraw, 带分页
+message QueryWithdrawListReq {
+  string coin = 1;  // 币.
+  string chain_type = 2;  // 链.
+  repeated int64 user_id = 3;  // 用户ID.
+  int32 is_hot_wallet = 4;  // 是否热钱包.
+  repeated int32 hot_wallet_status = 5;  // 热钱包状态.
+  repeated int32  risk_level = 6;  // 风险等级.
+  repeated string risk_tags = 7;  // 风控标签.
+  int64 submited_at_begin = 8;  // 提现申请时间（格式：时间戳）.
+  int64 submited_at_end = 9;  // 提现申请时间（格式：时间戳）.
+  int64 first_review_at_begin = 10; // 初审时间（格式：时间戳）.
+  int64 first_review_at_end = 11; // 初审时间（格式：时间戳）.
+  int32  first_review_result = 12; // 初审结果.
+  int64 final_review_at_begin = 13; // 终审时间（格式：时间戳）.
+  int64 final_review_at_end = 14; // 终审时间（格式：时间戳）.
+  int32 final_review_result = 15; // 终审结果.
+  int32 broker_id = 16; // 站点id.
+  int32 page = 17; // 当前页.
+  int32 limit = 18; // 每页显示的记录数.
+  optional string destination_tag = 19; // 提EOS和XRP时的备注字段.
+  string status = 20; // 提币状态.
+  string address = 21; // 提币地址.
+  int32 withdraw_type = 22; // 出金类型：2. 查所有类型, 其他值对应withdrawType pb值.
+}
+
+
+message WithdrawRecord {
+  int64 id                                     = 1;
+  int32 is_hot_wallet                          = 2;
+  int32 hot_wallet_status                      = 3;
+  int64 user_id                                = 4;
+  string coin                                  = 5;
+  uint32 position_id                           = 6; // 所属钱包.
+  string chain_type                            = 7; // 链.
+  string status                                = 8; // 状态.
+  uint32 transaction_id                        = 9; // 提现成功产生的交易id.
+  string amount                                = 10; // 金额.
+  string fee                                   = 11; // 手续费.
+  string from_address                          = 12; // 出金钱包地址.
+  string address                               = 13; // 目标地址.
+  uint64 admin_id                              = 14; // 操作员.
+  string reason                                = 15; // 管理员的备注.
+  string confirm_code                          = 16; // 用户确认提现码.
+  string txid                                  = 17; // 所在区块Hash.
+  string submited_at                           = 18; // 提交时间.
+  string confirmed_at                          = 19; // 邮件确认时间.
+  string verified_at                           = 20; // 后台审核通过时间.
+  string packed_at                             = 21; // 打包时间.
+  string broadcasted_at                        = 22; // 广播时间.
+  string successed_at                          = 23; // 提现成功时间.
+  string canceled_at                           = 24; // 用户手动取消时间.
+  string rejected_at                           = 25; // 后台审核拒绝时间.
+  string expired_at                            = 26; // 邮件过期时间.
+  optional string destination_tag              = 27; // 提EOS和XRP时的备注字段.
+  string risk_tags                             = 28; // 风控标签.
+  int32  risk_level                            = 29; // 风险等级.
+  int32  risk_status                           = 30; // 是否调用风控.
+  int32  first_review_result                   = 31; // 初审结果.
+  int32  first_review_admin_id                 = 32; // 初审人.
+  string first_review_desc                     = 33; // 初审说明.
+  string first_review_at                       = 34; // 初审时间.
+  string final_review_at                       = 35; // 终审时间.
+  int32 final_review_result                    = 36; // 终审结果.
+  int32 final_review_admin_id                  = 37; // 终审人.
+  string final_review_desc                     = 38; // 终审说明.
+  int32 reconciliation_id                      = 39; // 对账流水ID.
+  string reconciliation_result                 = 40; // 对账结果.
+  string admin_remarks                         = 41; // 管理员内部使用备注.
+  string hash_info                             = 42; // hash信息.
+  int64 blockchain_confirmed_at                = 43; // 区块链已确认时间.
+  bybit.assetwithdraw.common.enums.WithdrawType withdraw_type = 44; // 出金类型：0链上提币，1表示内部转账.
+  int64 tx_time = 45; // 链上交易时间,钱包回传.
+  string chain_id = 46; // 链ID,特殊链使用字段.
+  int32 broker_id = 47; // 站点ID.
+}
+
+message QueryWithdrawListResp {
+  int32 code = 1;
+  string message = 2;
+  repeated WithdrawRecord items = 3; // 提现流水记录.
+}
+
+message WithdrawExtRecord {
+  int64 id = 1;
+  int64 withdraw_id = 2;
+  string type = 3;
+  string ext_result = 4;
+  int64 created_at = 5;
+  int64 updated_at = 6;
+}
+
+message GetWithdrawExtRecordReq {
+  int64 withdraw_id = 1; // 提现id.
+  string type = 2; // 扩展字段类型.
+  int32  broker_id = 3; // 站点ID.
+}
+
+message GetWithdrawExtRecordResp {
+  int32 code = 1;
+  string message = 2;
+  WithdrawExtRecord data = 3;
+}
+
+message GetWithdrawRecordListReq {
+  repeated int64 withdraw_ids = 1;
+  int32  broker_id = 2; // 站点ID.
+}
+
+message GetWithdrawRecordListResp {
+  int32 code = 1;
+  string message = 2;
+  repeated WithdrawRecord items = 3;
+}
+
+// 查询用户提币次数请求.
+message GetWithdrawCountByUserIDReq {
+  int64 user_id = 1; // 用户id.
+  google.protobuf.Timestamp start_at = 2; // 开始时间.
+  google.protobuf.Timestamp end_at = 3; // 结束时间.
+  int32 broker_id = 4; // 站点ID.
+}
+
+// 查询用户提币次数响应.
+message GetWithdrawCountByUserIDResp {
+  int32 code = 1; // 错误码，0-成功.
+  string message = 2; // 错误信息.
+  int32 withdraw_count = 3; // 提币成功次数(包含提币中).
+}
+
+// 代客出金请求头.
+message WithdrawHelpUserReq {
+  string coin=1; // 币种.
+  string chain=2; // 链.
+  string address=3; // 用户出金地址.
+  string tag=4; // 出金地址tag.
+  string amount=5; // 用户出金金额.
+  int64 timestamp=6; // 请求时时间戳(毫秒).
+  int64 member_id=7; // 用户id.
+  bool all_in=8; // 是否全部出金.
+  int32 broker_id=9; // 站点ID.
+  string source_ip=10; // 来源ip.
+}
+
+// 代客出金回参.
+message WithdrawHelpUserResp {
+  int64 withdraw_id = 1; // 出金id.
+  int32 ret_code = 2; // 错误码,成功为0.
+  string ret_message = 3; // 消息.
+}
+
+message GetWithdrawDeductByWithdrawIDAndBrokerIDReq {
+  int64 withdraw_id = 1; // 提现id.
+  int32  broker_id  = 2; // 站点ID.
+}
+message GetWithdrawDeductByWithdrawIDAndBrokerIDResp {
+  int32 code =1;            // 1表示成功，2表示没有查到，3表示系统错误.
+  int64 id = 2;             // id 自增Id.
+  int64 withdraw_id = 3;    // withdraw_id 提现记录ID.
+  int64 user_id  = 4;       // user_id 用户ID.
+  int32 account_type = 5;   // account_type 账户类型.
+  int64 account_id = 6;     // account_id accountID.
+  string request_id = 7;    // request_id 下游扣款请求ID.
+  string coin = 8;          // coin 币种.
+  string amount = 9;        // amount 金额.
+  string fee = 10;           // fee 手续费.
+  int32 status = 11;        // status 扣款状态.
+  int32 report_status = 12; // report_status 上报对账状态.
+  int64 created_at = 13;    // created_at 创建时间.
+  int64 updated_at = 14;    // updated_at 更新时间.
+  int64 deleted_at = 15;    // deleted_at 删除时间，软删除.
+  int32 broker_id = 16;     // broker_id 站点标识.
+}
+// SpecialCUserWithdrawReq 特殊C端账号出金请求参数.
+message SpecialCUserWithdrawReq {
+  string request_id = 1;// 出金请求全局唯一id，幂等.
+  int64 user_id = 2;    // 用户id.
+  string coin = 3;      // 币种.
+  string chain = 4;     // 链名,比如erc20应该送ETH.
+  string address = 5;   // 提现地址.
+  string amount = 6;    // 提币数量.
+  string tag = 7;       // 存在tag的需要填写.
+  int32 broker_id = 8;  // 站点标识，0表示主站.
+}
+
+// SpecialCUserWithdrawResp 特殊C端账号出金返回参数.
+message SpecialCUserWithdrawResp {
+  int32 code = 1;        // 应答码.
+  string message = 2;    // 应答码说明.
+  int32 withdraw_id = 3; // 出金id.
+  int32 broker_id = 4;   // 站点标识，0表示主站.
+}
+
+// NotifyApexWithdrawResultReq web3通知apex出金结果请求.
+message NotifyApexWithdrawResultReq {
+  string request_id = 1; // 请求id.
+  int32 status = 2; // 状态  和apex对齐.
+  int32 broker_id = 3; // 站点标识，0表示主站.
+}
+
+// NotifyApexWithdrawResultResp web3通知apex出金结果响应.
+message NotifyApexWithdrawResultResp {
+  int32 code = 1; // 0-成功 其他-重试.
+  string message = 2; // 错误信息.
+}
+
+// ApexWithdrawRecord apex出金记录.
+message ApexWithdrawRecord {
+  int64 id = 1; // 出金id.
+  string request_id = 2; // 全局请求唯一id
+  int32 broker_id = 3;  // 站点id.
+  int64 user_id = 4; // 用户id.
+  int32 withdraw_type = 5; // 出金类型.
+  string coin = 6; // 币种.
+  string chain_type = 7; // 链类型.
+  string address = 8; // 地址.
+  string amount = 9; // 提币数量.
+  string fee = 10; // 手续费.
+  int64 reconciliation_id = 11; // 对账id.
+  int32 recon_status = 12; // 对账状态.
+  int32 risk_level = 13; // 风控等级.
+  string risk_tag = 14; // 风控tag.
+  int32 audit_status = 15; // 审核状态.
+  int32 hot_wallet_status = 16; // 热钱包状态.
+  int64 created_at = 17; // 创建时间.
+  int64 updated_at = 18; // 更新时间.
+  int64 canceled_at = 19; // 取消时间.
+  int64 audited_at = 20; // 审核时间.
+  int64 broadcast_at = 21; // 广播时间.
+  int64 succeeded_at = 22; // 成功时间.
+  string extension_info = 23; // 扩展信息.
+}
+
+// GetApexWithdrawRecordByIDReq 根据id查询出金记录请求.
+message GetApexWithdrawRecordByIDReq {
+  int64 id = 1; // 出金id
+  int32 broker_id = 2; // 站点标识，0表示主站.
+}
+
+// GetApexWithdrawRecordByIDResp 根据id查询出金记录响应.
+message GetApexWithdrawRecordByIDResp {
+  int32 code = 1; // 0-成功
+  string message = 2; // 错误信息.
+  ApexWithdrawRecord apex_withdraw_record = 3; // apex出金记录.
+}
+
+// GetApexWithdrawRecordByRequestIDReq 根据request_id查询出金记录请求.
+message GetApexWithdrawRecordByRequestIDReq {
+  string request_id = 1; // request_id
+  int32 broker_id = 2; // 站点标识，0表示主站.
+}
+
+// GetApexWithdrawRecordByRequestIDResp 根据request_id查询出金记录响应.
+message GetApexWithdrawRecordByRequestIDResp {
+  int32 code = 1; // 0-成功
+  string message = 2; // 错误信息.
+  ApexWithdrawRecord apex_withdraw_record = 3; // apex出金记录.
+}
+
+// GetApexWithdrawMapByRequestIDsReq 根据ids查询出金记录map请求.
+message GetApexWithdrawMapByIDsReq {
+  repeated int64 ids = 1; // 出金ids
+  int32 broker_id = 2; // 站点标识，0表示主站.
+}
+
+// GetApexWithdrawMapByRequestIDsResp 根据ids查询出金记录map响应.
+message GetApexWithdrawMapByIDsResp {
+  int32 code = 1; // 0-成功
+  string message = 2; // 错误信息.
+  map<int64, ApexWithdrawRecord> apex_withdraw_record_map = 3; // 提币记录map.
+}
+
+// GetApexWithdrawMapByRequestIDsReq 根据ids查询出金记录map请求.
+message GetApexWithdrawMapByRequestIDsReq {
+  repeated string request_ids = 1; // 出金request_ids
+  int32 broker_id = 2; // 站点标识，0表示主站.
+}
+
+// GetApexWithdrawMapByRequestIDsResp 根据ids查询出金记录map响应.
+message GetApexWithdrawMapByRequestIDsResp {
+  int32 code = 1; // 0-成功
+  string message = 2; // 错误信息.
+  map<string, ApexWithdrawRecord> apex_withdraw_record_map = 3; // 提币记录map.
+}
+
+// Pager 请求分页器
+message Pager {
+  int32 page = 1; // 页码
+  int32 limit = 2; // 每页条数限制
+}
+
+// StatusFilter 状态筛选器.
+message StatusFilter {
+  enum StatusQueryType {
+    None = 0; // 默认不进行状态筛选，即查询所有状态
+    QueryByHotWalletStatus = 1; // 按表中状态筛选，可自由指定
+    QueryByStatus = 2; // 按聚合状态筛选，聚合状态见下免枚举
+  }
+  enum Status {
+    NoneStatus = 0; // 占位.
+    UnderReview = 1; // 审核中.
+    PendingTransfer = 2; // 提币处理中.
+    Success = 3; // 提币已完成.
+    FailedAndRefunding = 4; // 提现失败.
+    FailedAndRefunded = 5; // 提现失败(已退款).
+    Cancelled = 6; // 已取消.
+    Rejected = 7; // 已驳回.
+  }
+  StatusQueryType status_query_type = 1; // 状态筛选器.
+  repeated int32 hot_wallet_status = 2; // 指定状态筛选，QueryByStatus=1时不可为空，否则查询不到任何数据.
+  repeated Status status = 3; // 按聚合状态筛选，QueryByStatus=2时，时不可为空或者0，否则查询不到任何数据.
+}
+
+// QueryApexWithdrawRecordListReq 筛选apex出金记录请求.
+message QueryApexWithdrawRecordListReq {
+  int64 user_id = 1; // 用户id.
+  string coin = 2; // 币种.
+  string chain = 3; // 链.
+  google.protobuf.Timestamp start_at = 4; // 开始时间.
+  google.protobuf.Timestamp end_at = 5; // 结束时间.
+  StatusFilter status_filter = 6; // 状态筛选器.
+  Pager pagination = 7; // 分页信息.
+  int32 broker_id = 8; // 站点标识，0表示主站.
+}
+
+// Pagination 响应分页器.
+message Pagination {
+  int32 limit = 1; // 分页大小.
+  int32 current_page = 2; // 当前页.
+  int32 total_page = 3; // 总页数.
+}
+
+// QueryApexWithdrawRecordListResp 筛选apex出金记录响应.
+message QueryApexWithdrawRecordListResp {
+  int32 code = 1; // 0-成功.
+  string message = 2; // 错误信息.
+  Pagination pagination = 3; // 分页信息.
+  repeated ApexWithdrawRecord apex_withdraw_record_list = 4; // 提币记录列表.
+}
+
+// GetWithdrawSucceedTotalAmountByUserIDAndWithdrawTypeReq 根据指定条件查询用户成功提币总金额请求.
+message GetWithdrawSucceedTotalAmountByUserIDAndWithdrawTargetReq {
+  enum Target {
+    ALL = 0; // 全部.
+    OnChainAndInternal = 1; // 链上和内部转账，包含web3.
+    Apex = 2; // apex出金.
+  }
+  Target withdraw_target = 1;
+  int64 user_id = 2; // 用户id.
+  string coin = 3; // 币种.
+  string address = 4; // 提币地址.
+  string tag = 5; // memo tag.
+  google.protobuf.Timestamp start_at = 6; // 开始时间
+  google.protobuf.Timestamp end_at = 7; // 结束时间
+  int32 broker_id = 8; // 站点标识，0表示主站.
+}
+
+// StatisticsWithdrawAmountData 统计数据.
+message StatisticsWithdrawAmountData {
+  int64 user_id = 1;
+  string coin = 2;
+  string amount = 3;
+  string status = 4;
+  int64 total_num = 5;
+}
+
+// GetWithdrawSucceedTotalAmountByUserIDAndWithdrawTypeResp 根据指定条件查询用户成功提币总金额响应.
+message GetWithdrawSucceedTotalAmountByUserIDAndWithdrawTargetResp {
+  int32 code = 1; // 错误码,0-成功.
+  string msg = 2; // 错误信息
+  map<string, StatisticsWithdrawAmountData> data = 3; // 统计信息，key为coin.
+}
+
+message IsUserWithdrawingReq {
+  int64 user_id = 1;
+}
+
+message IsUserWithdrawingResp {
+  int32 code = 1; // 0-成功 其他-重试.
+  string message = 2; // 错误信息.
+  bool is_withdrawing = 3; // 是否出于提币中, true表示提币中, false表示没有在提币中, 或用户不存在.
+}
+
+// NotifyWithdrawRiskVerifyResultEventReq 通知出金风控审核结果事件请求.
+message NotifyWithdrawRiskVerifyResultEventReq {
+  int64 withdraw_id = 1;
+  string request_id = 2;
+  int32 broker_id = 3;
+}
+
+// NotifyWithdrawRiskVerifyResultEventResp 通知出金风控审核结果事件响应.
+message NotifyWithdrawRiskVerifyResultEventResp {
+  int32 code = 1; // 0-成功 其他-重试.
+  string message = 2; // 错误信息.
+}

@@ -1,6 +1,8 @@
 const protoLoader = require("@grpc/proto-loader");
 const { createHmac } = require("crypto");
 const protobuf = require("protobufjs");
+const axios = require("axios");
+const { snakeCase, isObject, forIn } = require("lodash");
 const grpc = require("@grpc/grpc-js");
 const path = require("path");
 const long = require("long");
@@ -9,8 +11,11 @@ const fs = require("fs");
 const MSB = 0x80;
 const REST = 0x7f;
 const MSBALL = ~REST;
+const pbRootPathDefault = "./node_modules/@sec-rc/cmdh-node-sdk/pb/proto3";
+const pbFunRootPathDefault = "./node_modules/@sec-rc/cmdh-node-sdk/pb";
 
-let clientGrpc, pbRoot = {};
+let clientGrpc,
+  pbRoot = {};
 
 /**
  * pb项目目录，所有使用的请求主目录
@@ -64,6 +69,14 @@ function encode(num) {
   return buffer;
 }
 
+function snakeCaseObj(params) {
+  const obj = {};
+  forIn(params, (value, key) => {
+    obj[`${snakeCase(key)}`] = isObject(value) ? snakeCaseObj(value) : value;
+  });
+  return obj;
+}
+
 /**
  * 业务签名方法，参数固定
  * @param {*} params 参数
@@ -71,17 +84,22 @@ function encode(num) {
  * @returns
  */
 function getCmdhSign(params, base64secret) {
+  params = params.args.type === "json" ? snakeCaseObj(params) : params;
   const funcNamebuf = Buffer.from(params.name);
   const appNamebuf = Buffer.from(params.invoke.app_name);
   const argTypebuf = Buffer.from(params.args.type);
-  const payloadbuf = Buffer.from(params.args.payload);
+  const payloadbuf =
+    params.args.type === "json"
+      ? Buffer.from(params.args.payload, "base64")
+      : Buffer.from(params.args.payload);
   const apiLevelbuf = Buffer.from(encode(params.api_level));
   const noncebuf = Buffer.from(encode(params.invoke.nonce));
   const signatureModebuf = Buffer.from(encode(params.invoke.signature_mode));
   const operatorTypebuf = Buffer.from(encode(params.operator.type));
-  const requestTimebuf = Buffer.from(encode(params.invoke.request_time_e6));
+  const requestTimebuf = Buffer.from(
+    encode(params.invoke.request_time_e6 || params.invoke.request_time_e_6)
+  );
   const operatorIdbuf = Buffer.from(encode(params.operator.id));
-
   const buf = Buffer.concat([
     funcNamebuf,
     appNamebuf,
@@ -101,9 +119,16 @@ function getCmdhSign(params, base64secret) {
   return sign;
 }
 
+/**
+ * pb初始化，参数固定
+ * @param {*} cmdhInfo 参数
+ * @param {*} funInfo 参数
+ * @returns
+ */
 function initClientGrpc(cmdhInfo, funInfo) {
   const { hostGrpc, pbRootPath = pbRootPathDefault } = cmdhInfo;
-  const { pbRootPath: funPbRootPath } = funInfo;
+  let { pbRootPath: funPbRootPath } = funInfo;
+  if (!funPbRootPath) funPbRootPath = pbFunRootPathDefault;
   const cmdhPbPath = path.join(process.cwd(), pbRootPath);
   const funPbPath = path.join(process.cwd(), funPbRootPath);
   if (!clientGrpc) {
@@ -131,19 +156,15 @@ function initClientGrpc(cmdhInfo, funInfo) {
     );
   }
 
-  if (!pbRoot['cmdh']) {
+  if (!pbRoot["cmdh"]) {
     // 项目下所有的pb转换为pb树
-    pbRoot['cmdh'] = protobuf.loadSync(getFiles(cmdhPbPath));
+    pbRoot["cmdh"] = protobuf.loadSync(getFiles(cmdhPbPath));
   }
   if (!pbRoot[funInfo.funName]) {
     // 项目下所有的pb转换为pb树
     const res = getFiles(funPbPath);
     pbRoot[funInfo.funName] = protobuf.loadSync(res);
   }
-
-
-
-  console.log('------------------')
 }
 
 /**
@@ -164,9 +185,9 @@ async function sendGrpc(funInfo, cmdhInfo, payload) {
   let d = Date.now();
   const data = {
     invoke: {
+      app_name: appname,
       nonce: Math.floor(d / 1000),
       request_time_e6: d * 1000,
-      app_name: appname,
       signature_mode: 1,
     },
     operator: { type: 1, id: 1 },
@@ -197,6 +218,48 @@ async function sendGrpc(funInfo, cmdhInfo, payload) {
 /**
  * 预留方法
  */
-async function sendHttp() {}
+async function sendHttp(funcName, cmdhConf, payload) {
+  try {
+    const { host, route } = cmdhConf;
+    const { appname: appName, secret } = cmdhConf;
+    const requestTime = ~~(+new Date() / 1000) * 1e6;
+    const signData = {
+      invoke: {
+        appName,
+        nonce: 123,
+        requestTimeE6: requestTime,
+        signatureMode: 1,
+      },
+      operator: {
+        type: 1,
+        id: 123,
+      },
+      name: funcName,
+      apiLevel: 1,
+      args: {
+        type: "json",
+        payload: Buffer.from(JSON.stringify(payload)).toString("base64"),
+      },
+    };
+
+    const sign = getCmdhSign(signData, secret);
+    const res = await axios({
+      url: `${host}${route}`,
+      data: signData,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Grpc-Metadata-signature": sign,
+      },
+    })
+    const respayload = Buffer.from(res.data.result.payload, "base64").toString(
+      "utf8"
+    );
+    const item = JSON.parse(respayload) || {};
+    return item;
+  } catch (error) {
+    throw error;
+  }
+}
 
 module.exports = { sendGrpc, sendHttp };

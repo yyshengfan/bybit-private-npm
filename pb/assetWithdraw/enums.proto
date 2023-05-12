@@ -1,0 +1,39 @@
+syntax = "proto3";
+package bybit.assetwithdraw.common.enums;
+
+option go_package = "code.bydev.io/cht/asset/withdraw-stub.git/pkg/bybit/assetwithdraw/common/enums";
+
+
+// AddressType 地址类型.
+enum AddressType {
+  // 链上地址.
+  ADDRESS_TYPE_ON_CHAIN = 0;
+  // 内部地址.
+  ADDRESS_TYPE_INTERNAL = 1;
+  // web3地址.
+  ADDRESS_TYPE_WEB3 = 3;
+  // apex地址.
+  ADDRESS_TYPE_APEX = 4;
+}
+
+// InternalAddressType 内部出金地址类型.
+enum InternalAddressType {
+  // 默认值.
+  INTERNAL_ADDRESS_TYPE_UNKNOWN = 0;
+  // 邮件.
+  INTERNAL_ADDRESS_TYPE_EMAIL = 1;
+  // 手机号.
+  INTERNAL_ADDRESS_TYPE_PHONE = 2;
+}
+
+// WithdrawType 出金类型.
+enum WithdrawType {
+  // 链上提币.
+  WITHDRAW_TYPE_ON_CHAIN = 0;
+  // 内部转账.
+  WITHDRAW_TYPE_INTERNAL = 1;
+  // web3出金.
+  WITHDRAW_TYPE_WEB3 = 3;
+  // 特殊C端账户出金.
+  WITHDRAW_TYPE_SPECIAL_USER = 4;
+}

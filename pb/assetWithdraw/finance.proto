@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+option java_package = "com.bybit.option.fundpool.grpc.finance";
+option java_multiple_files = true;
+
+package com.bybit.option.fundpool.grpc.finance;
+
+// 风控查询服务
+service FundPoolRiskService {
+
+  /**
+   * 查看核销记录
+   */
+  rpc queryVerifySserial (FundPoolRiskRequest) returns (FundPoolRiskResponse);
+
+}
+
+message FundPoolRiskRequest{
+
+  /**
+   * 请求Id 幂等Id
+   */
+  string bizRequestId = 1;
+
+  /**
+   * 核销id
+   */
+  string resOrderId = 2;
+
+  int64 uid = 3;
+
+}
+
+
+
+message FundPoolRiskResponse{
+
+  /**
+   *  返回码 0成功
+   */
+  int32 retCode = 1;
+
+  /**
+   * 返回码描述
+   */
+  string retMsg = 2;
+
+  /**
+   * 币种
+   */
+  string coin = 3;
+
+  /*
+   * 是否核销1核销,0未核销
+  */
+  int64 status =4;
+
+  /**
+   * 金额
+   */
+  string amount = 5;
+}

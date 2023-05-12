@@ -1,0 +1,44 @@
+syntax = "proto3";
+package bybit.assetwithdraw.withdraw.inner.v1;
+
+option go_package = "code.bydev.io/cht/asset/withdraw-stub.git/pkg/bybit/assetwithdraw/withdraw/inner/v1";
+import "bybit/assetwithdraw/withdraw/inner/v1/withdraw.proto";
+
+// AssetWithdraw 出金内部接口.
+service AssetWithdraw {
+  // 统计个人的提币总额.
+  rpc GetStatisticsPersonalTotalAmount(GetStatisticsPersonalTotalAmountReq) returns (GetStatisticsPersonalTotalAmountResp);
+  // 通过条件查询提币记录.
+  rpc QueryWithdrawList(QueryWithdrawListReq) returns (QueryWithdrawListResp);
+  // 批量根据withdrawID查询提币记录.
+  rpc GetWithdrawRecordList(GetWithdrawRecordListReq) returns (GetWithdrawRecordListResp);
+  // 查询提币扩展信息.
+  rpc GetWithdrawExtRecord(GetWithdrawExtRecordReq) returns (GetWithdrawExtRecordResp);
+  // 查询用户提币次数.
+  rpc GetWithdrawCountByUserID(GetWithdrawCountByUserIDReq) returns (GetWithdrawCountByUserIDResp);
+  // 代客出金.
+  rpc WithdrawHelpUser(WithdrawHelpUserReq) returns (WithdrawHelpUserResp);
+  // 出金扣款记录查询接口.
+  rpc GetWithdrawDeductByWithdrawIDAndBrokerID(GetWithdrawDeductByWithdrawIDAndBrokerIDReq) returns (GetWithdrawDeductByWithdrawIDAndBrokerIDResp);
+  // 特殊C端账户出金.
+  rpc SpecialCUserWithdraw(SpecialCUserWithdrawReq) returns (SpecialCUserWithdrawResp);
+  // web3通知apex出金结果.
+  rpc NotifyApexWithdrawResult(NotifyApexWithdrawResultReq) returns (NotifyApexWithdrawResultResp);
+  // 根据id查询apex出金记录.
+  rpc GetApexWithdrawRecordByID(GetApexWithdrawRecordByIDReq) returns (GetApexWithdrawRecordByIDResp);
+  // 根据ids查询apex出金记录map.
+  rpc GetApexWithdrawMapByIDs(GetApexWithdrawMapByIDsReq) returns (GetApexWithdrawMapByIDsResp);
+  // 根据request_id查询apex出金记录.
+  rpc GetApexWithdrawRecordByRequestID(GetApexWithdrawRecordByRequestIDReq) returns (GetApexWithdrawRecordByRequestIDResp);
+  // 根据ids查询apex出金记录map.
+  rpc GetApexWithdrawMapByRequestIDs(GetApexWithdrawMapByRequestIDsReq) returns (GetApexWithdrawMapByRequestIDsResp);
+  // 根据指定条件筛选apex出金记录.
+  rpc QueryApexWithdrawRecordList(QueryApexWithdrawRecordListReq) returns(QueryApexWithdrawRecordListResp);
+  // 根据指定条件查询用户成功提币总金额(可同时包含withdraw/apex_withdraw或者分开统计).
+  rpc GetWithdrawSucceedTotalAmountByUserIDAndWithdrawTarget(GetWithdrawSucceedTotalAmountByUserIDAndWithdrawTargetReq) returns(GetWithdrawSucceedTotalAmountByUserIDAndWithdrawTargetResp);
+  // 根据uid查询用户是否在提币中.
+  rpc IsUserWithdrawing(IsUserWithdrawingReq) returns (IsUserWithdrawingResp);
+  // 出金风控审核结果事件通知
+  rpc NotifyWithdrawRiskVerifyResultEvent(NotifyWithdrawRiskVerifyResultEventReq) returns (NotifyWithdrawRiskVerifyResultEventResp);
+}
+
