@@ -1,0 +1,61 @@
+syntax = "proto3";
+package bybit.kyc.integration.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/integration/v1";
+
+import "bgw/v1/annotations.proto";
+import "bybit/kyc/common/enums/kyc.proto";
+import "bybit/kyc/common/rpc.proto";
+
+service IntegrationPrivateAPI {
+	// 获取 KYC 组件化用户画像
+	rpc GetIntegrationKycProfile (GetIntegrationKycProfileRequest) returns (GetIntegrationKycProfileResponse);
+}
+
+message GetIntegrationKycProfileRequest {
+	string uid        = 1; // 业务账户ID（若属于 bybit 主体业务传uid；否则传业务方全局唯一ID）
+	bool is_secondary = 2; // 是否第二证件认证
+	string from       = 3; // 业务来源（需要到kyc团队申请，由KYC团队分配及管理）
+}
+
+message GetIntegrationKycProfileResponse {
+	message Identify {
+		string type         = 1; // 证件类型
+		string number       = 2; // 证件号
+		string country      = 3; // 证件签发国
+	}
+	message Address {
+		string country      = 1;  // 国家
+		string state        = 2;  // 州
+		string city         = 3;  // 城市
+		string full_address = 4;  // 完整的居住地址
+		string postal_code  = 5;  // 邮政编码
+	}
+	message Info {
+		message Applicant {
+			string            firstname   = 1; // 申请人名字
+			string            lastname    = 2; // 申请人姓
+			string            country     = 3; // 国籍
+			repeated Identify identify    = 4; // 证件
+			string            dob         = 5; // 出生日期
+			string            pass_time   = 6; // 通过时间，新增记录为实际通过时间历史数据为记录的更新时间
+			string            nationality = 7; // 客户手动选择可能不真实，也可能不存在
+			Address           address     = 8; // 居住地址
+		}
+
+		message State {
+			bybit.kyc.common.enums.MemberKYCLevel  passed_level = 1; // 用户已确定通过的最高评级
+			bybit.kyc.common.enums.MemberKYCLevel  auth_level   = 2; // 用户评级等级(可能状态 认证中or认证成功or认证失败)
+			bybit.kyc.common.enums.MemberKycStatus status       = 3; // 用户评级状态
+		}
+		string                               uid          = 1; // 业务方唯一ID
+		bybit.kyc.common.enums.MemberKYCType type         = 2; // 申请人类型
+		Applicant                            applicant    = 3; // 申请人基本信息
+		State                                state        = 4; // kyc认证状态
+		bybit.kyc.common.enums.KYCProvider   provider     = 5; // 用户所属供应商
+		string                               from         = 6; // 业务来源
+		bool                                 is_secondary = 7; // 是否第二证件认证
+	}
+	bybit.kyc.common.Error error = 1;
+	map<string, Info> result     = 2;
+}

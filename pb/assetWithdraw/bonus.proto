@@ -1,0 +1,138 @@
+syntax = "proto3";
+package bonus;
+
+option go_package = "git.bybit.com/gtdmicro/stub/pkg/svc/bonus";
+option php_namespace = "Bybit\\GTDMicro\\Stub\\Bonus";
+
+enum BizType {
+  BIZ_TYPE_UNKNOWN = 0;
+  BIZ_TYPE_FUTURES = 1;  // 合约
+  BIZ_TYPE_SPOT = 2;  // 现货
+  BIZ_TYPE_USDC_PERP = 3;  // USDC 永续合约
+  BIZ_TYPE_USDC_OPTIONS = 4;  // USDC 期权
+  BIZ_TYPE_USDC_COMMON = 5;  // 期权 (体验金发送时使用)
+  BIZ_TYPE_FIAT = 6; // 法币
+  BIZ_TYPE_COPY_TRADING = 7; // copy trading
+  BIZ_TYPE_TRADING_BOT = 8; // trading bot
+}
+
+enum BizSubType {
+  BIZ_SUB_TYPE_UNKNOWN = 0;
+  BIZ_SUB_TYPE_USDT_PERPETUAL = 1;  // 正向合约
+  BIZ_SUB_TYPE_INVERSE_PERPETUAL = 2;  // 反向合约
+  BIZ_SUB_TYPE_INVERSE_FUTURES = 3;  // 反向交割
+  BIZ_SUB_TYPE_UNIFIED = 4; // 统保交易
+  BIZ_SUB_TYPE_LINEAR_FUTURES = 5; // 正向交割
+  BIZ_SUB_TYPE_UNIFIED_FUTURES = 6; // 统保交割
+  BIZ_SUB_TYPE_UTA = 7; // 统一交易账号普通交易
+  BIZ_SUB_TYPE_UTA_FUTURES = 8; // 统一交易账号交割交易
+  BIZ_SUB_TYPE_FLAT_EXPRESS = 9; // 法币express子业务线
+  BIZ_SUB_TYPE_FLAT_DEPOSIT = 10; // 法币deposit子业务线
+  BIZ_SUB_TYPE_FLAT_EXPRESS_DEPOSIT = 11; // 法币deposit express子业务线通用
+  BIZ_SUB_TYPE_COPY_TRADING_CONTRACT = 12; // copy trading 普通合约账户类型
+  BIZ_SUB_TYPE_COPY_TRADING_UTA = 13; // copy trading UTA账户类型
+  BIZ_SUB_TYPE_TRADING_BOT_SPOT_GRID = 14; // trading bot 现货保险券
+  BIZ_SUB_TYPE_TRADING_BOT_DCA = 15; // trading bot  DCA 保险券
+  BIZ_SUB_TYPE_TRADING_BOT_FUTURE_GRID = 16; // trading bot  合约保险券
+  BIZ_SUB_TYPE_TRADING_BOT_ALL = 17; // trading bot  通用保险券
+} 
+
+enum BonusType{
+  BONUS_TYPE_UNKNOWN = 0;
+  // 体验金
+  BONUS_TYPE_BONUS = 1;
+  // 抵扣金
+  BONUS_TYPE_COUPON = 2;
+  // 限时赠金 目前仅现货有
+  BONUS_TYPE_TRADING_VOUCHER = 3;
+  // 空投
+  BONUS_TYPE_AIRDROP = 4;
+}
+
+message RetrieveBonusRequest{
+  // 站点ID
+  int32 broker_id = 1;
+  // bu
+  BizType biz_type = 2;
+  // sub bu
+  BizSubType biz_sub_type = 3;
+  // 用户ID
+  int64 user_id = 4;
+  // 对应赠金系统里面的具体的卡券
+  string req_id = 5;
+  // 回收的来源
+  RetrieveSource source = 6;
+  // 回收的赠金类型
+  BonusType bonus_type = 7;
+  // 回收的coin
+  string coin = 8;
+}
+
+enum RetrieveSource{
+  // 默认source只能逐条回收
+  SOURCE_DEFAULT = 0;
+  // 统交账户升级，全部回收
+  SOURCE_UAT = 1;
+  // copy trade 结单冲销
+  SOURCE_COPY_TRADE_UNFOLLOW = 2;
+}
+
+message RetrieveBonusResponse{
+  int64 err_code = 1;
+  string err_msg = 2;
+}
+
+message ListBonusUsedDetailsRequest{
+  // 站点ID 主站0
+  int32 broker_id = 1;
+  // 用户id
+  int64 user_id = 2;
+  // 请求唯一id
+  string req_id = 3;
+  // 列表页码
+  int64 page = 4;
+  // 每页数量
+  int64 limit = 5;
+  // 根据订单id批量查询
+  repeated string order_id = 6;
+  // 根据撮合id批量查询
+  repeated string exec_id = 7;
+  // 不传返回1 1-正常使用 2-回收 3-使用回滚(仅法币场景支持) 4-主账号划转子账号 5-子账号结单冲销
+  repeated int32 used_status = 8;
+}
+
+message BonusUsedDetail{
+  // 订单id
+  string order_id = 1;
+  // 撮合id
+  string exec_id = 2;
+  // 使用额度
+  string used_amount = 3;
+  // 使用时间
+  int64 exec_time_e9 = 4;
+  // symbol
+  string symbol = 5;
+  // coin
+  string coin = 6;
+  // 1-正常使用 2-回收 3-使用回滚(仅法币场景支持) 4-主账号划转子账号 5-子账号结单冲销
+  int32 used_status = 7;
+  // 抵扣金返现/赠金回收状态 0-写入 1/5 回收成功
+  int32 deal_status = 8;
+}
+
+message ListBonusUsedDetailsResponse{
+  // 0 成功
+  int64 err_code = 1;
+  string err_msg = 2;
+  repeated BonusUsedDetail details = 3;
+  int32 total = 4;
+}
+
+service Bonus {
+  // 回收赠金接口
+  rpc RetrieveBonus(RetrieveBonusRequest) returns (RetrieveBonusResponse) {
+  }
+  // 查询赠金详情接口
+  rpc ListBonusUsedDetails(ListBonusUsedDetailsRequest) returns (ListBonusUsedDetailsResponse){
+  }
+}

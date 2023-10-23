@@ -1,0 +1,48 @@
+syntax = "proto3";
+package bybit.kyc.callback.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/callback/v1";
+
+import "bgw/v1/annotations.proto";
+import "bybit/kyc/common/rpc.proto";
+
+service CallbackAPI  {
+  option (bgw.v1.service_options) = {
+    registry : "kyc-public";
+    filters:[
+      {
+        name: FILTER_RESPONSE;
+        args: "--version=v1"; // v1为下划线风格，默认为驼峰风格
+      }
+    ];
+    timeout: 3,
+    selector: SELECTOR_ROUND_ROBIN; // 负载均衡策略：轮询
+    protocol: PROTOCOL_GRPC;
+  };
+
+  // sumsub applicant回调入口
+  rpc SumsubApplicantCallback (SumsubApplicantCallbackRequest) returns (SumsubApplicantCallbackResponse){
+    option (bgw.v1.method_options) = {
+      path: "/v1/sumsub/applicant-callback";
+      http_method: HTTP_METHOD_POST;
+      filters:[
+        {
+          name: FILTER_CONTEXT,
+          args: '--inboundHeader=["x-payload-digest"]'
+        },
+        {
+          name: FILTER_REQUEST,
+          args: "--duplicateKey=false"
+        }
+      ];
+      timeout: 30,
+    };
+  };
+}
+
+message SumsubApplicantCallbackRequest {
+  bytes request = 1;   // bgw透传body
+}
+
+message SumsubApplicantCallbackResponse {
+}

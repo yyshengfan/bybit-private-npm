@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package bybit.kyc.aml.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/aml/v1";
+
+import "bybit/kyc/common/enums/aml.proto";
+import "bybit/kyc/common/rpc.proto";
+
+
+service AmlAPI {
+  // 创建 Aml Screening
+  rpc CreateScreening (CreateScreeningRequest) returns (CreateScreeningResponse);
+  // 查询 Aml Screening 结果
+  rpc QueryScreeningDecision (QueryScreeningDecisionRequest) returns (QueryScreeningDecisionResponse);
+  // AML Move Case
+  rpc MoveCase (MoveCaseRequest) returns (MoveCaseResponse);
+}
+
+
+message CreateScreeningRequest {
+  string                            requestID = 1;  // 请求ID
+  string                            memberID = 2;  // 用户ID
+  int64                             brokerID = 3;  // 商户ID
+  bybit.kyc.common.enums.SceneCode  sceneCode = 4;  // 场景代码
+  string country = 5; // 国家三字码
+  string name = 6; // 名称， first+middle+last
+  string dateBirth = 7; // 出生日期 yyyy-mm-dd
+  bybit.kyc.common.enums.AmlGender gender = 8; // 性别
+  bool isNew = 9; // true,新版本（开启五要素校验）false 通过memberID 取用户渠道商数据
+}
+
+message CreateScreeningResponse {
+  bybit.kyc.common.Error  error = 1; // code：10000 "当前结果已存在"， 10001 "当前用户为Level0"，10002 "当前用户为KYB"，10003 "fullName is empty"， 10004 "request is emty"， 10005 "结果不存在"
+  string                              suggestion = 2; // 初审结果
+  string                              salesforceDecision = 3; // Salesforce 审核结果
+  string                              salesforceFinalDecision = 4; // Salesforce 终审结果
+  OGSDecision                              OGSDecision = 5; // OGS 结果
+}
+
+message QueryScreeningDecisionRequest {
+  string requestID = 1;  // 请求ID
+  bybit.kyc.common.enums.SceneCode  sceneCode = 2;  // 场景代码
+  string memberID = 3;  // 如果 requestID为空 且 memberID 存在，则使用 memberID 进行查询，否则使用 requestID查询。输出最新一条memberID查询记录
+}
+
+message QueryScreeningDecisionResponse {
+  bybit.kyc.common.Error              error = 1;
+  string                              requestID = 2;  // 请求ID
+  string                              memberID = 3;   // 用户ID
+  int64                               brokerID = 4;   // 商户ID
+  bybit.kyc.common.enums.SceneCode    sceneCode = 5;  // 场景代码
+  string                              suggestion = 6; // 初审结果
+  string                              salesforceDecision = 7; // Salesforce 审核结果
+  string                              salesforceFinalDecision = 8; // Salesforce 终审结果
+  OGSDecision                              OGSDecision = 9; // OGS 结果
+}
+
+// OGS 的结果
+message OGSDecision {
+  string                              suggestion = 1; // 初审结果
+  string                              salesforceDecision = 2; // Salesforce 审核结果
+  string                              salesforceFinalDecision = 3; // Salesforce 终审结果
+  string                              ogsDate = 4; // 最新的OGS日期 yyyy-mm-dd， 如果没有为空字符串
+}
+
+// MoveCase
+message MoveCaseRequest {
+  int64 memberID = 1;   // 用户ID
+  bybit.kyc.common.enums.Source  source = 2;  // 来源
+}
+
+message MoveCaseResponse{
+  bybit.kyc.common.Error              error = 1;
+}
+// MoveCase

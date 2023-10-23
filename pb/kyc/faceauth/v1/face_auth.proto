@@ -1,0 +1,12 @@
+syntax = "proto3";
+package bybit.kyc.faceauth.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/faceauth/v1";
+
+import "bybit/kyc/common/face_auth.proto";
+
+message GetFaceAuthTokenResult {
+	string                     biz_id     = 1; // 业务ID
+	bybit.kyc.common.TokenInfo token_info = 2; // Token 信息
+	string                     ticket     = 3; // 业务验证 Ticket
+}

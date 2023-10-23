@@ -1,0 +1,128 @@
+syntax = "proto3";
+package bybit.kyc.common.enums;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/common/enums";
+
+enum KYCProvider {
+	PROVIDER_DEFAULT = 0;
+	PROVIDER_SUMSUB = 1;          // 供应商 Sumsub
+	PROVIDER_JUMIO = 2;          // 供应商 Jumio
+	PROVIDER_ONFIDO = 3;         // 供应商 Onfido
+}
+
+// KYC level config
+enum MemberKYCLevel {
+	LEVEL_DEFAULT = 0;   // 未通过kyc
+	LEVEL_1 = 1;
+	LEVEL_2 = 2;
+}
+
+enum KYCDocType {
+	KYC_DOC_TYPE_UNDEFINED = 0;        // 未定义
+	KYC_DOC_TYPE_ID = 1;               // 身份证
+	KYC_DOC_TYPE_PASSPORT = 2;         // 护照
+	KYC_DOC_TYPE_DL = 3;               // 驾照
+	KYC_DOC_TYPE_LIVING_PERMITS = 4;   // 居住证
+	KYC_DOC_TYPE_SPECIAL_CATEGORY = 5; // 特殊类型
+	KYC_DOC_TYPE_BVN = 33;              // 尼日尼亚bvn
+}
+
+enum VerifiedImageType {
+	VERIFIED_IMAGE_TYPE_UNSPECIFIED = 0;
+	VERIFIED_IMAGE_TYPE_FRONT = 1; // 证件正面
+	VERIFIED_IMAGE_TYPE_BACK = 2; // 证件反面
+	VERIFIED_IMAGE_TYPE_FACE = 3; // 人脸图像
+	VERIFIED_IMAGE_TYPE_LIVENESS = 4; // 活体图像
+}
+
+enum DocumentCaptureMethod {
+	DOCUMENT_CAPTURE_METHOD_UNDEFINED = 0;     // 未定义
+	DOCUMENT_CAPTURE_METHOD_CAMERA_ONLY = 1;   // 仅拍摄
+	DOCUMENT_CAPTURE_METHOD_CAMERA_AND_UPLOAD = 2;  // 拍摄及文件上传
+}
+
+enum IDSubType {
+	ID_SUB_TYPE_UNDEFINED = 0;             // 未定义
+	ID_SUb_TYPE_NATIONAL_ID = 1;           // 身份证
+	ID_SUb_TYPE_CONSULAR_ID = 2;           // 领事证
+	ID_SUb_TYPE_RESIDENT_PERMIT_ID = 3;    // 居住卡
+	ID_SUb_TYPE_TAX_ID = 4;                // 税务卡
+	ID_SUb_TYPE_STUDENT_ID = 5;            // 学生卡
+	ID_SUb_TYPE_PASSPORT_CARD_ID = 6;      // 护照卡
+	ID_SUb_TYPE_MILITARY_ID = 7;           // 军人卡
+	ID_SUb_TYPE_PUBLIC_SAFETY_ID = 8;      // 安全卡
+	ID_SUb_TYPE_HEALTH_ID = 9;             // 健康卡
+	ID_SUb_TYPE_VISA = 10;                 // VISA访问卡
+	ID_SUb_TYPE_OTHER_ID = 11;             // 其他
+}
+
+enum PPSubType {
+	PP_SUB_TYPE_UNDEFINED = 0;       // 未定义
+	PP_SUB_TYPE_E_PASSPORT = 1;      // 电子护照
+}
+
+enum DLSubType {
+	DL_SUB_TYPE_UNDEFINED = 0;                 // 未定义
+	DL_SUB_TYPE_REGULAR_DRIVING_LICENSE = 1;   // 正式驾照
+	DL_SUB_TYPE_LEARNING_DRIVING_LICENSE = 2;  // 学习驾照
+}
+
+enum MemberKYCType {
+	INDIVIDUAL = 0;     // 个人
+	COMPANY = 1;        // 公司
+}
+
+enum MemberKycStatus {
+	ALLOW = 0;                      // 可认证
+	PENDING = 1;                    // 认证中
+	SUCCESS = 2;                    // 认证成功
+	FAILED_AND_CAN_RETRY = 3;       // 认证失败，可重试
+	FAILED_AND_CAN_NOT_RETRY = 4;   // 认证失败，不可重试
+	NOT_ALLOW = 5;                  // 不可认证
+}
+
+enum MemberKYCLimitation {
+	LIMITATION_DEFAULT = 0;    // 无限制
+	LIMITATION_DEMAND = 1;     // 要求kyc
+	LIMITATION_WORD_CHECK = 2; // WORD_CHECK封禁
+	LIMITATION_BAN = 3;        // 客服后台封禁
+}
+
+// kyc供应商通道健康状态枚举
+enum ProviderHealthStatus {
+	HEALTH_STATUS_UNDEFINED = 0;	// 未定义
+	HEALTH_STATUS_UP = 1;     // 正常
+	HEALTH_STATUS_DOWN = 2;		// 故障
+}
+
+enum MaintainStatus {
+	MAINTAIN_STATUS_UNDEFINED = 0;	// 未定义
+	MAINTAIN_STATUS_ON 	= 1; // 开启
+	MAINTAIN_STATUS_OFF = 2; // 关闭
+}
+
+enum HealthCheckBizPage {
+	HEALTH_CHECK_BIZ_PAGE_UNDEFINED = 0;	// 未定义
+	HEALTH_CHECK_BIZ_PAGE_HOME 	= 1; // 首页
+	HEALTH_CHECK_BIZ_PAGE_COUNTRY = 2; // 二级国家页面
+}
+
+enum KycTransferVerifyStatus {
+	KYC_TRANSFER_VERIFY_STATUS_UNDEFINED = 0; // 未定义
+	KYC_TRANSFER_VERIFY_STATUS_PENDING   = 1; // 处理中
+	KYC_TRANSFER_VERIFY_STATUS_COMPLETE  = 2; // 处理完成
+}
+
+enum Custody {
+	CUSTODY_UNSPECIFIED = 0;
+	CUSTODY_SATOS       = 1; // satos
+}
+
+enum QuestionnaireStatus {
+	QUESTIONNAIRE_STATUS_UNDEFINED        = 0; // 未定义
+	QUESTIONNAIRE_STATUS_UNSUBMIT         = 1; // 未提交
+	QUESTIONNAIRE_STATUS_PENDING          = 2; // 待审批可编辑
+	QUESTIONNAIRE_STATUS_PENDING_NO_EDIT  = 3; // 审批中不可以编辑
+	QUESTIONNAIRE_STATUS_APPROVED         = 4; // 通过
+	QUESTIONNAIRE_STATUS_REJECTED         = 5; // 拒绝
+}

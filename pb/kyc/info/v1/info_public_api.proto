@@ -1,0 +1,501 @@
+syntax = "proto3";
+package bybit.kyc.info.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/info/v1";
+
+import "bgw/v1/annotations.proto";
+import "bybit/common/enums/coin.proto";
+import "bybit/kyc/common/enums/kyc.proto";
+import "bybit/kyc/common/enums/risk.proto";
+import "bybit/kyc/common/rpc.proto";
+import "google/protobuf/empty.proto";
+
+service InfoPublicAPI {
+	option (bgw.v1.service_options) = {
+		registry : "kyc-public";
+		filters:[
+			{
+				name: FILTER_RESPONSE;
+				args: "--version=v1"; // v1为下划线风格，默认为驼峰风格
+			}
+		];
+		timeout: 3,
+		selector: SELECTOR_ROUND_ROBIN; // 负载均衡策略：轮询
+		protocol: PROTOCOL_GRPC;
+	};
+
+	// 获取用户当前kyc信息，客户端使用
+	rpc GetMemberKYCInfoEx (GetMemberKYCInfoExRequest) returns (GetMemberKYCInfoExResponse){
+		option (bgw.v1.method_options) = {
+			path: "/v3/private/kyc/kyc-info";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_QPS_LIMITER,
+					args: "--rate=600"
+				},
+				{
+					name: FILTER_BIZ_LIMITER,
+					args: "--group=kyc-info --rate=20 --period=1m"
+				}
+			];
+			timeout: 10,
+		};
+	};
+	// 获取供应商相关的配置信息
+	rpc GetVendorInfoEx (GetVendorInfoExRequest) returns (GetVendorInfoExResponse){
+		option (bgw.v1.method_options) = {
+			path: "/v3/private/kyc/get-vendor-info";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER,
+					args: "--group=get-vendor-info --rate=20 --period=1m"
+				}
+			];
+		};
+	};
+	// 根据国籍获取kyc服务供应商信息
+	rpc GetKYCProviderEx (GetKYCProviderExRequest) returns (GetKYCProviderExResponse){
+		option (bgw.v1.method_options) = {
+			path: "/v3/private/kyc/get-kyc-provider";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER,
+					args: "--group=get-kyc-provider --rate=20 --period=1m"
+				}
+			];
+		};
+	};
+	// kyc新增国籍和居住地字段
+	rpc SetKycInfoEx (SetKycInfoExRequest) returns(google.protobuf.Empty){
+		option (bgw.v1.method_options) = {
+			path: "/v3/private/kyc/set-kyc-info";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER,
+					args: "--group=set-kyc-info --rate=20 --period=1m"
+				}
+			];
+		};
+	};
+	// 获取国籍对应证件类型
+	rpc SupportedDocumentType (SupportedDocumentTypeRequest) returns(SupportedDocumentTypeResponse){
+		option (bgw.v1.method_options) = {
+			path: "/v3/private/kyc/supported-document-type";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER,
+					args: "--group=supported-document-type --rate=20 --period=1m"
+				}
+			];
+		};
+	};
+	// 获取token信息
+	rpc KycHealthCheck (KycHealthCheckRequest) returns(KycHealthCheckResponse){
+		option (bgw.v1.method_options) = {
+			path: "/v3/private/kyc/health-check";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER_V2,
+					args: '--rules=[{"rate":20,"period_sec":60,"uid":true,"path":true}]'
+				}
+			];
+			timeout: 2,
+		};
+	};
+	// 获取token信息
+	rpc GetKycToken (GetKycTokenRequest) returns(GetKycTokenResponse){
+		option (bgw.v1.method_options) = {
+			path: "/v3/private/kyc/token";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER_V2,
+					args: '--rules=[{"rate":20,"period_sec":60,"uid":true,"path":true}]'
+				}
+			];
+			timeout: 4,
+		};
+	};
+	// 获取第三方注册用户 KYC 等级(Terafarm)
+	rpc GetThirdPartyKycLevel(GetThirdPartyKycLevelRequest) returns(GetThirdPartyKycLevelResponse){
+		option (bgw.v1.method_options) = {
+			path: "/v1/kyc/open/get-kyc-level";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_BIZ_LIMITER_V2,
+					args: '--rules=[{"rate":30,"period_sec":3,"uid":false,"path":true}]'
+				},
+				{
+					name: FILTER_CONTEXT,
+					args: '--inboundHeader=["X-Open-Source", "X-Open-Access-Ts", "X-Open-Signature"]'
+				}
+			];
+			timeout: 3,
+		};
+	};
+
+	// 安全组件风控拦截器
+	rpc RiskComponentInterceptor(RiskComponentInterceptorRequest) returns(RiskComponentInterceptorResponse){
+		option (bgw.v1.method_options) = {
+			path: "/v1/kyc/risk-component/intercept";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER_V2,
+					args: '--rules=[{"rate":15,"period_sec":3,"uid":true,"path":true}]'
+				}
+			];
+			timeout: 3,
+		};
+	};
+
+	// KYC 转移验证接口
+	rpc KycTransferVerify (KycTransferVerifyRequest) returns (KycTransferVerifyResponse) {
+		option (bgw.v1.method_options) = {
+			path: "/v1/kyc/transfer/verify";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER_V2,
+					args: '--rules=[{"rate":15,"period_sec":3,"uid":true,"path":true}]'
+				}
+			];
+			timeout: 6,
+		};
+	};
+
+	// KYC 转移验证接口
+	rpc KycTransferStatus (google.protobuf.Empty) returns (KycTransferStatusResponse) {
+		option (bgw.v1.method_options) = {
+			path: "/v1/kyc/transfer/status";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER_V2,
+					args: '--rules=[{"rate":15,"period_sec":3,"uid":true,"path":true}]'
+				}
+			];
+			timeout: 3,
+		};
+	};
+	// bgw 创建kyc问卷调查
+	rpc CreateSatosQuestionnaire (CreateSatosQuestionnaireRequest) returns (google.protobuf.Empty) {
+		option (bgw.v1.method_options) = {
+			path: "/v3/private/kyc/create-satos-questionnaire";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER_V2,
+					args: '--rules=[{"rate":30,"period_sec":60,"uid":true,"path":true}]'
+				}
+			];
+			timeout: 3,
+		};
+	};
+		// 查询satos最新的答题记录
+	rpc QuerySatosQuestionnaire (google.protobuf.Empty) returns (QuerySatosQuestionnaireResponse) {
+		option (bgw.v1.method_options) = {
+		path: "/v3/private/kyc/query-satos-questionnaire";
+				http_method: HTTP_METHOD_GET;
+				filters:[
+		    {
+		      name: FILTER_AUTH;
+				},
+		    {
+	      	name: FILTER_BIZ_LIMITER_V2,
+				 args: '--rules=[{"rate":120,"period_sec":60,"uid":true,"path":true}]'
+				}
+		    ];
+				timeout: 3,
+		};
+	};
+}
+
+message KycTransferControl {
+	bool switch                               = 1; // 身份转移控制开关
+	string forbidden_notice                   = 2; // 禁止身份转移时的提示信息
+}
+
+message KycTransferStatusResponse {
+	bybit.kyc.common.enums.KycTransferVerifyStatus status  = 1; // 转移状态
+	bool is_gray                                           = 2; // 是否是灰度用户,=true 时显示按钮
+	KycTransferControl control = 3; // 身份转移控制器对象
+}
+
+message RiskComponentScenceToken {
+	string scence     = 1; // 场景标识
+	string risk_token = 2; // 验证token
+}
+
+message KycTransferExtraParams {
+	bybit.kyc.common.enums.RiskComponentUserType type           = 1; // 用户名类型
+	string                                       username       = 2; // 用户名(邮箱地址或者手机号码)
+	string                                       country_code   = 3; // 国家代码
+}
+
+message KycTransferVerifyRequest {
+	RiskComponentScenceToken                     risk_component = 1; // 风控组件参数
+	string                                       user_type      = 2; // 用户类型（source：验证源用户；target：验证目标用户）
+	KycTransferExtraParams                       extra_params   = 3; // 扩展参数
+}
+
+message KycTransferVerifyResponse {
+	bool                                           success = 1; // 成功标记
+	string                                         reason  = 2; // 失败原因
+	bybit.kyc.common.enums.KycTransferVerifyStatus status  = 3; // 转移状态
+}
+
+message RiskComponentInterceptorRequest {
+	string                                       scence       = 1; // 场景码
+	bybit.kyc.common.enums.RiskComponentUserType type         = 2; // 用户名类型
+	string                                       username     = 3; // 用户名(邮箱地址或者手机号码)
+	string                                       country_code = 4; // 国家代码
+}
+
+message RiskComponentInterceptorResponse {
+	string risk_token = 1; // 风控 Token
+	string risk_token_type = 2; // 控制的类型
+	bool   is_trigger_intercept = 3; // 是否被拦截
+}
+
+message GetThirdPartyKycLevelRequest {
+	string email = 1;       // 第三方注册邮件
+}
+
+message GetThirdPartyKycLevelResponse {
+	int32 passed_level = 1; // 通过的 KYC 等级(0:未通过;1:通过等级1;2:通过等级2)
+}
+
+message TokenParams {
+	bybit.kyc.common.enums.MemberKYCLevel level = 1;   // kyc等级
+	string doc_type = 2;                               // 文件类型jumio level2认证的时候需要
+	string country = 3;                                // 国籍code alpha-3  level2认证的时候需要
+	string success_url = 4;                            // 成功的时候的url
+	string error_url = 5;                              // 错误的时候的url
+}
+
+message GetMemberKYCInfoExRequest {
+	bool obtain_kyc_token = 1;     // 是否获取kyc token
+	bool obtain_current = 2;       // 是否获取用户当前已确定的 kyc 信息.当前信息
+	bool obtain_quotas = 3;        // 是否获取各个level下各个币种的kyc配额
+	bool obtain_state = 4;         // 是否获取进行中的状态
+	// deprecated: obtain_doc_list 文档类型通过GetVendorInfo接口获取
+	bool obtain_doc_list = 5;      // 是否获取jumio支持的文档类型 废弃
+	// deprecated: obtain_provider
+	bool obtain_provider = 6;      // 要求服务端返回供应商,此参数用于做level2认证的时候判断是否需要选择文档和国家code
+	TokenParams token_params = 7;  // jumio需要提供level信息 如果没有此参数表示老版本app走sumsub
+	string version_code = 8;       // 根据版本返回新老sdk的token
+}
+
+message CoinLimit {
+	bybit.common.enums.Coin coin = 1;    // 币种
+	int64 limit = 2;                     // 日提币限额
+	string daily_limit = 3;                             // 日提币限额,提币配置后台返回
+	string monthly_limit = 4;                         // 月提币限额,提币配置后台返回
+	string unit = 5;                                         // 提币配置后台配置的币种
+}
+
+message KYCQuota {
+	bybit.kyc.common.enums.MemberKYCLevel  level = 1;  // 用户评级
+	repeated CoinLimit coin_limit = 2;                 // 评级对应的各个币种限额
+}
+
+message KYCState {
+	bybit.kyc.common.enums.MemberKYCLevel level = 1;    // 用户评级
+	bybit.kyc.common.enums.MemberKYCType type = 2;      // 申请人类型
+	bybit.kyc.common.enums.MemberKycStatus status = 3;  // 评级状态
+	repeated string reject_labels = 4;                  // 失败原因
+}
+
+message KYCLimitationInfo {
+	bybit.kyc.common.enums.MemberKYCLevel level = 1;   // 封禁目标等级
+}
+
+message Applicant {
+	string firstname = 1;               // 申请人名字
+	string lastname = 2;                // 申请人名字
+	string country = 3;                 // 国籍
+	map<string, string> identifies = 4; // 证件类型 + 证件号
+	bybit.kyc.common.enums.MemberKYCLevel level = 5; // 当前级别
+	bybit.kyc.common.enums.MemberKYCType type = 6;   // 申请人类型
+}
+
+message KycRequiredInfo {
+	bool kycRequired = 1;   // 是否要求kyc
+	string reason = 2;      // 要求kyc原因
+	string deadline = 3;    // 截止时间
+}
+
+message TokenInfo {
+	string jumio_url = 1;             // jumio做level认证的时候web端使用此信息做重定向跳转
+	string token = 2;                 // jumio做level1认证和sumsub的认证使用此值
+	string workflow_run_id = 3;       // Onfido 做 Level1、Level2 的 workflow run id
+}
+
+message KYBQuota {
+	string unit = 1;                                         // 提币配置后台配置的币种
+	string daily_limit = 2;              // 日提币限额,配置后台返回
+	string monthly_limit = 3;                         // 月提币限额，配置后台返回
+}
+
+message DisplayControl {
+		bool is_display_questionnaire = 1; // 展示问卷开关
+		bool is_display_p2p_rights = 2; // 展示p2p权益开关
+}
+
+message GetMemberKYCInfoExResponse {
+	bool opened = 1;                                           // KYC功能是否开启0： 关闭, 1：开启
+	string kyc_token = 2;                                      // SDK提交资料所需kyc token  后续将废弃
+	repeated KYCQuota quotas = 3;                              // 提币限额配置信息
+	repeated KYCState state = 4;                               // 认证状态
+	bybit.kyc.common.enums.MemberKYCLimitation limitation = 5; // 封禁状态,             当前信息
+	KYCLimitationInfo limitation_info = 6;                     // limitation关联的信息  当前信息
+	Applicant applicant = 7;                                   // 申请人信息，           当前信息
+	string api_url = 8;                                        // provider url
+	repeated string flow_names = 9;                            // the name of the applicant flow
+	KycRequiredInfo kyc_required_info = 10;                    // 要求用户kyc信息
+	TokenInfo   token_info = 11;                               // SDK提交资料所需token或者url
+	bybit.kyc.common.enums.KYCProvider provider = 12;
+	string error_notify = 13;                                  // 错误提示信息
+	string nationality = 14;                                   // 国籍
+	string residence = 15;                                     // 居住地
+	KYBQuota kyb_quota = 16;                                   // 企业KYB提币限额配置
+	bool redirect_web3 = 17;                                   // 是否导流去 web3
+	bool redirect_apex = 18;                                   // 是否导流去 apex
+	bybit.kyc.common.enums.Custody custody = 19;               // 托管商
+	bool must_questionnaire = 20;                              // 是否需要问卷调查
+	bybit.kyc.common.enums.QuestionnaireStatus questionnaire_status = 21; // 问卷调查状态
+	DisplayControl display_control = 22;                                   // 展示控制开关
+}
+
+message SetKycInfoExRequest {
+	string residence = 1;                   // kyc居住地 residence
+	string nationality = 2;                 // kyc国籍 nationality
+}
+
+message GetVendorInfoExRequest{
+	bool abtain_jumio_doc_type = 1;
+}
+
+message JumioDocTypeItem {
+	string code = 1;
+	string name = 2;
+}
+
+message GetVendorInfoExResponse {
+	repeated JumioDocTypeItem jumio_doc_type = 1;
+}
+
+message GetKYCProviderExRequest {
+	string nationality = 1;                                    // kyc国籍 nationality
+	bybit.kyc.common.enums.KYCDocType doc_type = 2;   // 证件类型
+}
+
+message GetKYCProviderExResponse {
+	bybit.kyc.common.enums.KYCProvider provider = 1;    // 根据国籍提供对应的供应商
+}
+
+message SupportedDocumentTypeRequest {
+	string country = 1;
+}
+message Tips {
+	repeated string tip = 1;
+}
+
+message SupportedDocumentTypeResponse {
+	repeated bybit.kyc.common.enums.KYCDocType supported_doc_type = 1;
+	repeated bybit.kyc.common.enums.KYCDocType doc_recommend = 2; // 证件推荐列表
+	map<string, Tips> special_tips = 3; // 特殊文案配置
+}
+
+// 获取token接口协议定义
+message GetKycTokenRequest {
+	bybit.kyc.common.enums.MemberKYCLevel apply_level = 1;    // 用户申请认证的等级 1=Level1 2=Level2
+	bybit.kyc.common.enums.KYCProvider provider = 2;        // 使用通道枚举值 1=sumsub 2=jumio 3=Onfido
+	map<string, string> token_params = 3; // 获取token时请求的参数
+}
+
+message GetKycTokenResponse {
+	string token = 1; // token信息
+	string redirect_url = 2;    // sdk重定向地址
+	map<string, string> extra = 3; // 额外信息，用于扩展
+}
+
+// kyc健康信息接口
+message KycHealthCheckRequest {
+	bybit.kyc.common.enums.HealthCheckBizPage biz_page = 1;    // 请求的页面 1=kyc首页  2=二级页面
+	bybit.kyc.common.enums.MemberKYCLevel apply_level = 2;    // 用户申请认证的等级 1=Level1 2=Level2
+	map<string, string> extra_params = 3; // 额外参数
+}
+
+message KycHealthCheckResponse {
+	bybit.kyc.common.enums.KYCProvider provider = 1;    // 认证通道信息
+	bybit.kyc.common.enums.ProviderHealthStatus status = 2;    // 认证通道健康信息
+	int32 maintain_time = 3;    // 维护时间，单位s
+}
+
+
+// CreateSatosQuestionnaireRequest 创建问卷调查
+message CreateSatosQuestionnaireRequest {
+	string biz_from = 1; // 枚举值：kyc/fait
+	SatosQuestionnaireAnswer answer = 2; // 答题卡信息
+	string national = 3; // 选择kyc的国家（2字码），白户的时候必传，存量kycv1和lv2不用传
+}
+message SatosQuestionnaireAnswer {
+	repeated string be_customer_reasons = 1 [json_name = "be_customer_reasons"];// 多选项:想成为satos客户的原因.
+	string chosen_country = 2 [json_name = "chosen_country"];             // 单选项：用户认证lv1时选择的证件发行国家.
+	string customer_type = 3 [json_name = "customer_type"];               // 单选项：用户类型
+	repeated string income_source = 4 [json_name = "income_source"];      // 多选项：主要收入来源
+	string net_worth = 5 [json_name = "net_worth"];                       // 单选项：净值
+	string bank = 6 [json_name = "bank"];                                 // 单选项：顾客的银行
+	string custom_bank = 7 [json_name = "custom_bank"];                   // 手输的银行
+	string bank_account = 8 [json_name = "bank_account"];                 // 银行账号信息
+}
+
+
+message QuerySatosQuestionnaireResponse {
+	SatosQuestionnaireAnswer answer = 1 [json_name = "answer"];   // 答题卡信息
+	bybit.kyc.common.enums.QuestionnaireStatus questionnaire_status = 2 [json_name = "questionnaire_status"]; // 问卷状态，0-默认值，1-未提交，2-待审批可编辑，3- 审批中不可以编辑，4-通过，5-拒绝
+	int64  created_at = 3 [json_name = "created_at"];                 // 创建时间
+	int64  updated_at = 4 [json_name = "updated_at"];                 // 更新时间
+}

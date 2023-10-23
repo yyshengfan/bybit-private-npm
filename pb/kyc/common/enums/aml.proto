@@ -1,0 +1,22 @@
+syntax = "proto3";
+package bybit.kyc.common.enums;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/common/enums";
+
+enum SceneCode {
+  SCENE_CODE_UNDEFINED = 0; // 未定义
+  SCENE_CODE_BYBIT_GLOBAL = 1; // bybit_global
+  SCENE_CODE_BYBIT_CARD = 2; // bybit_card
+  SCENE_CODE_NL = 3; // 荷兰站
+}
+
+enum AmlGender {
+  Unknown = 0; // 未知
+  Male = 1; // 男
+  FeMale = 2; // 女
+}
+
+enum Source {
+  SourceUnknown = 0; // 未知
+  SourceEasyEuro = 1; // EasyEuro
+}

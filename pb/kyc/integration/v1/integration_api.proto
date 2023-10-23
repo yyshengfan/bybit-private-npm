@@ -1,0 +1,118 @@
+syntax = "proto3";
+package bybit.kyc.integration.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/integration/v1";
+
+import "bgw/v1/annotations.proto";
+import "bybit/common/enums/coin.proto";
+import "bybit/kyc/common/enums/kyc.proto";
+import "bybit/kyc/common/rpc.proto";
+import "google/protobuf/empty.proto";
+import "bybit/kyc/info/v1/info_public_api.proto";
+
+service IntegrationAPI {
+	option (bgw.v1.service_options) = {
+		registry : "kyc-public";
+		filters:[
+			{
+				name: FILTER_RESPONSE;
+				args: "--version=v1"; // v1为下划线风格，默认为驼峰风格
+			}
+		];
+		timeout: 3,
+		selector: SELECTOR_ROUND_ROBIN; // 负载均衡策略：轮询
+		protocol: PROTOCOL_GRPC;
+	};
+
+	// 申请kyc sdk访问token
+	rpc AccessToken (AccessTokenRequest) returns (AccessTokenResponse){
+	};
+
+	// 获取请求kyc认证的业务信息
+	rpc GetBusinessInfo (GetBusinessInfoRequest) returns (GetBusinessInfoResponse){
+	};
+
+	// 获取用户当前kyc信息
+	rpc GetIntegrationInfo (bybit.kyc.info.v1.GetMemberKYCInfoExRequest) returns (GetIntegrationInfoResponse){
+	};
+
+	// 根据国籍获取kyc服务供应商信息
+	rpc GetProvider (bybit.kyc.info.v1.GetKYCProviderExRequest) returns (bybit.kyc.info.v1.GetKYCProviderExResponse){
+	};
+
+	// 获取国籍对应证件类型
+	rpc SupportedDocumentTypeEx (bybit.kyc.info.v1.SupportedDocumentTypeRequest) returns (bybit.kyc.info.v1.SupportedDocumentTypeResponse){
+	};
+
+	// 创建kyc问卷调查
+	rpc CreateSatosQuestionnaireEx (CreateSatosQuestionnaireRequest) returns (google.protobuf.Empty){
+	};
+
+	// 查询kyc问卷调查
+	rpc QuerySatosQuestionnaireEx (google.protobuf.Empty) returns (QuerySatosQuestionnaireResponse) {
+	};
+
+	}
+
+
+message AccessTokenRequest {
+	bybit.kyc.common.enums.MemberKYCLevel level = 1;    // 用户申请认证的等级 1=Level1 2=Level2
+	bool is_secondary = 2;    // 是否第二证件（证明）认证
+	string from = 3; // 业务来源（接入前到kyc团队申请，由kyc团队分配及管理）
+	string uid = 4; // 若属于bybit主体业务，则传uid；否则传业务方全局唯一id。长度不超过32。
+	map<string, string> extra_params = 5; // 额外参数
+}
+
+message AccessTokenResponse {
+	string access_token = 1; // 唤起kyc组件的token
+}
+
+message GetBusinessInfoRequest {
+}
+
+message GetBusinessInfoResponse {
+	bybit.kyc.common.enums.MemberKYCLevel level = 1;    // 用户申请认证的等级 1=Level1 2=Level2
+	bool is_secondary = 2;    // 是否第二证件（证明）认证
+	string access_origin = 3; // 访问业务来源（主要区分是否为bybit主体)
+	map<string, string> extra_params = 4; // 额外参数
+}
+
+message GetIntegrationInfoResponse {
+	bool opened = 1;                                           // KYC功能是否开启0： 关闭, 1：开启
+	string kyc_token = 2;                                      // SDK提交资料所需kyc token  后续将废弃
+	repeated bybit.kyc.info.v1.KYCState state = 3;             // 认证状态
+	bybit.kyc.info.v1.Applicant applicant = 4;                 // 申请人信息，
+	string error_notify = 5;                                   // 错误提示信息
+	bybit.kyc.common.enums.KYCProvider provider = 6;           // 供应商
+	bybit.kyc.info.v1.TokenInfo   token_info = 7;              // SDK提交资料所需token或者url
+	bybit.kyc.common.enums.Custody custody = 8;                // 托管方, 如Satos
+	bool must_questionnaire = 9;                               // 是否需要问卷调查
+	bybit.kyc.common.enums.QuestionnaireStatus questionnaire_status = 10; // 问卷调查状
+	bybit.kyc.info.v1.DisplayControl display_control = 11;                                   // 展示控制开关
+}
+
+
+// CreateSatosQuestionnaireRequest 创建问卷调查
+message CreateSatosQuestionnaireRequest {
+	string biz_from = 1; // 来源
+	SatosQuestionnaireAnswer answer = 2; // 答题卡信息
+	string national = 3;                 // 选择kyc的国家（2字码），白户的时候必传，存量kycv1和lv2不用传
+}
+
+message SatosQuestionnaireAnswer {
+	repeated string be_customer_reasons = 1 [json_name = "be_customer_reasons"];// 多选项:想成为satos客户的原因.
+	string chosen_country = 2 [json_name = "chosen_country"];             // 单选项：用户认证lv1时选择的证件发行国家.
+	string customer_type = 3 [json_name = "customer_type"];               // 单选项：用户类型
+	repeated string income_source = 4 [json_name = "income_source"];      // 多选项：主要收入来源
+	string net_worth = 5 [json_name = "net_worth"];                       // 单选项：净值
+	string bank = 6 [json_name = "bank"];                                 // 单选项：顾客的银行
+	string custom_bank = 7 [json_name = "custom_bank"];                   // 手输的银行
+	string bank_account = 8 [json_name = "bank_account"];                 // 银行账号信息
+}
+
+message QuerySatosQuestionnaireResponse {
+	SatosQuestionnaireAnswer answer = 1 [json_name = "answer"];   // 答题卡信息
+	bybit.kyc.common.enums.QuestionnaireStatus questionnaire_status = 2 [json_name = "questionnaire_status"]; // 问卷状态，0-默认值，1-未提交，2-待审批可编辑，3- 审批中不可以编辑，4-通过，5-拒绝
+	int64  created_at = 3 [json_name = "created_at"];                 // 创建时间
+	int64  updated_at = 4 [json_name = "updated_at"];                 // 更新时间
+}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+package bybit.kyc.common;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/common";
+
+import "bybit/kyc/common/enums/kyc.proto";
+
+message TokenInfo {
+	string token                                = 1; // KYC 通道 token
+	string url                                  = 2; // 跳转 URL
+	bybit.kyc.common.enums.KYCProvider provider = 3; // KYC 通道
+}

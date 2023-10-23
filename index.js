@@ -14,8 +14,10 @@ const MSBALL = ~REST;
 const pbRootPathDefault = "./node_modules/@sec-rc/cmdh-node-sdk/pb/proto3";
 const pbFunRootPathDefault = "./node_modules/@sec-rc/cmdh-node-sdk/pb";
 
-let clientGrpc,
-  pbRoot = {};
+let clientGrpc
+let pbRoot = {};
+
+const clientMap = {}
 
 /**
  * pb项目目录，所有使用的请求主目录
@@ -168,6 +170,46 @@ function initClientGrpc(cmdhInfo, funInfo) {
 }
 
 /**
+ * pb初始化，参数固定
+ * @param {*} cmdhInfo 参数
+ * @param {*} funInfo 参数
+ * @returns
+ */
+function initPureClientGrpc(funInfo) {
+  const { hostGrpc, pbPath, funPath } = funInfo;
+  if (!clientMap[funPath]) {
+    const protoPath = path.join(
+      process.cwd(),
+      pbPath
+    );
+    const options = {
+      keepCase: true,
+      longs: String,
+      enums: String,
+      defaults: true,
+      oneofs: true,
+    };
+    const packageDefinition = protoLoader.loadSync(protoPath, options);
+    const commandProto = grpc.loadPackageDefinition(packageDefinition);
+
+    const funArr = funPath.split(".")
+    let client;
+    funArr.forEach(item => {
+      client = client? client[item] : commandProto[item]
+    })
+    clientMap[funPath] = new client(
+      hostGrpc,
+      grpc.credentials.createInsecure(),
+      {
+        keepalive_time_ms: 2 * 60 * 60 * 1000,
+        keepalive_timeout_ms: 60 * 1000,
+      }
+    );
+
+  }
+}
+
+/**
  * 请求方法
  * @param {*} funInfo 业务请求信息
  * @param {*} cmdhInfo cmdh配置信息
@@ -210,6 +252,30 @@ async function sendGrpc(funInfo, cmdhInfo, payload) {
       } else {
         const resInfo = ResObject.decode(response.result.payload);
         resolve(resInfo);
+      }
+    });
+  });
+}
+
+/**
+ * 请求方法
+ * @param {*} funInfo 业务请求信息
+ * @param {*} payload 业务请求参数
+ * @returns
+ */
+async function sendPureGrpc(funInfo, payload) {
+
+  const {funPath, funName} = funInfo
+  // init
+  await initPureClientGrpc(funInfo);
+  const meta = new grpc.Metadata();
+
+  return new Promise((resolve, reject) => {
+    clientMap[funPath][funName](payload, meta, function (err, response) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(response);
       }
     });
   });
@@ -262,4 +328,4 @@ async function sendHttp(funcName, cmdhConf, payload) {
   }
 }
 
-module.exports = { sendGrpc, sendHttp };
+module.exports = { sendGrpc, sendHttp, sendPureGrpc };

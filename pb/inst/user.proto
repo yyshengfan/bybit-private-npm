@@ -1,0 +1,32 @@
+syntax = "proto3";
+package com.bybit.cht.instmng.common.service.integration.grpc.user;
+option java_multiple_files = true;
+option java_package = "com.bybit.cht.instmng.common.service.integration.grpc.user";
+option java_outer_classname = "InstInfoServiceProto";
+
+service InstInfoService{
+  /**
+   * 根据 uid（主子账号） 查询机构信息
+   */
+  rpc QueryInstInfoByUid(InstInfoQueryRequest) returns(InstInfoResponse);
+}
+message InstInfoQueryRequest{
+  string requestId = 1;
+  string instId    = 2;   // 机构id
+  string instName  = 3;   // 机构名称
+  int64  uid       = 4;   // 
+}
+message InstInfoResponse{
+  string                requestId = 1;
+  int32                 retCode   = 2; // grpc 返回代码
+  string                retMsg    = 3; // message
+  InstInfoQueryResponse result    = 4;
+}
+message InstInfoQueryResponse{
+  repeated Inst instInfoList = 1;   // 机构查询response
+}
+message Inst{
+  string instId   = 1;    // 机构id
+  string instName = 2;    // 机构名称
+  string owner    = 3;    // rm
+}

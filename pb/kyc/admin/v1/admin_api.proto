@@ -1,0 +1,64 @@
+syntax = "proto3";
+package bybit.kyc.admin.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/admin/v1";
+
+import "bybit/kyc/admin/v1/admin.proto";
+import "bybit/kyc/common/rpc.proto";
+
+service AdminAPI {
+  rpc GetCountryConfig(GetCountryConfigRequest) returns (GetCountryConfigResponse);
+  rpc SetCountryConfig(SetCountryConfigRequest) returns (SetCountryConfigResponse);
+  rpc GetCommonConfig(GetCommonConfigRequest) returns (GetCommonConfigResponse);
+  rpc SetCommonConfig(SetCommonConfigRequest) returns (SetCommonConfigResponse);
+  // 获取用户kyc图片信息
+  rpc GetKycImage(GetKycImageReq) returns (GetKycImageResp);
+}
+
+message GetCountryConfigRequest {
+  string country_code = 1; // 国家码
+  string country_name = 2; // 国家名，若同时指定国家码与国家名，则按国家码检索；若均没有指定，指分页拉取。
+  int64 page_no =  3;  // 页码
+  int64 page_size = 4; // 页大小
+  string doc_recommend = 5; // 证件推荐列表
+  map<string, string> special_tips = 6; // 特殊文案配置
+}
+
+message GetCountryConfigResponse {
+  bybit.kyc.common.Error error = 1;
+  repeated bybit.kyc.admin.v1.CountryConfig country_config = 2;
+  int64 total = 3;  // 总条目
+  int64 page_size = 4; // 分页大小
+}
+
+message SetCountryConfigRequest {
+  bybit.kyc.admin.v1.CountryConfig country_config = 1;
+}
+
+message SetCountryConfigResponse {
+  bybit.kyc.common.Error error = 1;
+}
+
+message GetCommonConfigRequest {
+}
+
+message GetCommonConfigResponse {
+  bybit.kyc.common.Error error = 1;
+  bybit.kyc.admin.v1.CommonConfig common_config = 2;
+}
+
+message SetCommonConfigRequest {
+  bybit.kyc.admin.v1.CommonConfig common_config = 1;
+}
+
+message SetCommonConfigResponse {
+  bybit.kyc.common.Error error = 1;
+}
+
+message GetKycImageReq {
+  string token = 1; // 解密token
+}
+message GetKycImageResp {
+  int64 image_size = 1; // 图片大小
+  bytes image_data = 2; // 图片数据
+}

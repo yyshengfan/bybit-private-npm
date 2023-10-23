@@ -1,0 +1,36 @@
+syntax = "proto3";
+package bybit.kyc.admin.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/admin/v1";
+
+import "bybit/kyc/common/enums/kyc.proto";
+
+message SpecialText {
+  message Content {
+    string language = 1;
+    string text = 2;
+    string key_name = 3;
+  }
+  repeated Content content = 1;
+}
+
+message CountryConfig {
+  string country_code    = 1; // 国家码
+  string country_name    = 2; // 国家名
+  bybit.kyc.common.enums.KYCProvider provider = 3; // KYC 通道
+  bybit.kyc.common.enums.DocumentCaptureMethod capture_method    = 4; // 采集方式
+  repeated bybit.kyc.common.enums.KYCDocType doc_types = 5; // 证件许可类型
+  SpecialText special_text = 6; // 特殊文案
+  repeated bybit.kyc.common.enums.KYCDocType doc_recommend = 7; // 证件推荐列表
+  string special_tips = 8; // 特殊文案配置
+}
+
+message DocSubtype {
+  repeated bybit.kyc.common.enums.IDSubType ID_subtype = 1; // ID可选子类型
+  repeated bybit.kyc.common.enums.DLSubType DL_subtype = 2; // DL可选子类型
+  repeated bybit.kyc.common.enums.PPSubType PP_subtype = 3; // PP可选子类型
+}
+
+message CommonConfig {
+  DocSubtype doc_subtype = 1; // 证件子类型配置
+}

@@ -1,3 +1,6 @@
 [submodule "pb/proto3"]
 	path = pb/proto3
 	url = git@git.bybit.com:svc/proto3.git
+[submodule "pb/risk-proto3"]
+	path = pb/risk-proto3
+	url = git@rtm-risk-prod-gitlab.byrisk.io:public-go/risk-proto3.git

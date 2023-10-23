@@ -1,0 +1,38 @@
+syntax = "proto3";
+package bybit.kyc.faceauth.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/faceauth/v1";
+
+import "bybit/kyc/common/enums/kyc.proto";
+import "bybit/kyc/faceauth/v1/face_auth.proto";
+
+service FaceAuthPrivateService {
+	// 获取人脸比对 token(gRPC)，业务后端使用
+	rpc GetFaceAuthToken (GetFaeAuthTokenRequest) returns (GetFaceAuthTokenResult);
+
+	// 验证人脸比对结果(gRPC)，业务后端使用
+	rpc CheckFaceAuthTicket (CheckFaeAuthTicketRequest) returns (CheckFaceAuthTicketResult);
+}
+
+message GetFaeAuthTokenRequest {
+	string app_id    = 1; // 应用ID
+	string scene_id  = 2; // 场景ID
+	string member_id = 3; // UID
+	string biz_id    = 4; // 业务ID(业务幂等)
+	string lang      = 5; // KYC SDK 多语言支持（目前只有 jumio 需要）
+}
+
+message CheckFaeAuthTicketRequest {
+	string app_id    = 1; // 应用ID
+	string scene_id  = 2; // 场景ID
+	string member_id = 3; // UID
+	string biz_id    = 4; // 业务ID(业务幂等)
+	string ticket    = 5; // 业务验证 Ticket
+}
+
+message CheckFaceAuthTicketResult {
+	bool   check_status = 1; // 验证人脸比对结果状态（true:成功;false:失败）
+	string check_remark = 2; // 验证人脸比对结果描述
+	string action_id    = 3; // 通道人脸比对流水ID
+	bybit.kyc.common.enums.KYCProvider provider = 4; // KYC 通道
+}

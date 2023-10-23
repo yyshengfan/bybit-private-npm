@@ -1,0 +1,124 @@
+syntax = "proto3";
+package bybit.kyc.faceauth.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/faceauth/v1";
+
+import "google/protobuf/empty.proto";
+import "bgw/v1/annotations.proto";
+import "bybit/kyc/faceauth/v1/face_auth.proto";
+import "bybit/kyc/common/enums/kyc.proto";
+
+message GetFaeAuthStatusRequest {
+	string ticket = 1; // 业务验证 Ticket
+}
+
+message GetFaceAuthStatusResult {
+	int32 status = 1; // 验证状态(0:比对中,1:比对完成)
+}
+
+message GetKycInfoFaceAuthConfigResult {
+	bool is_available = 1; // 是否可用人脸比对
+	int32 countdown   = 2; // 倒计时秒数(单位：秒)
+}
+
+message GetIdentityRequest {
+	string google_2fa_code  							= 1;                 // 2fa验证码
+	string face_auth_biz_id 							= 2;                 // 人脸比对业务ID
+	string face_auth_ticket 							= 3;                 // 人脸比对 ticket
+	IdentityRiskComponent risk_component 	= 4;     						 // 安全组件
+}
+
+message IdentityRiskComponent {
+	string scence 		  = 1; // 场景标识
+	string risk_token 	= 2; // 验证token
+}
+
+message GetIdentityResult {
+	bybit.kyc.common.enums.MemberKYCLevel level = 1; // 等级
+	string first_name                           = 2; // first_name
+	string last_name                            = 3; // last_name
+	bybit.kyc.common.enums.KYCDocType doc_type  = 4; // 证件类型
+	string doc_number                           = 5; // 证件号码
+	string country                              = 6; // 国家
+}
+
+service FaceAuthPublicService {
+	option (bgw.v1.service_options) = {
+		registry : "kyc-public";
+		filters:[
+			{
+				name: FILTER_RESPONSE;
+				args:"--version=v1"; // v1为下划线风格，默认为驼峰风格
+			}
+		];
+		timeout: 3,
+		selector: SELECTOR_ROUND_ROBIN;
+		protocol: PROTOCOL_GRPC;
+	};
+
+	// 查询人脸比对状态(bgw HTTP)，业务前端使用
+	rpc GetFaceAuthStatus (GetFaeAuthStatusRequest) returns (GetFaceAuthStatusResult){
+		option (bgw.v1.method_options) = {
+			path: "/v1/kyc/face_auth/status";
+			http_method: HTTP_METHOD_GET;
+			filters:[
+				{
+					name: FILTER_BIZ_LIMITER,
+					args: "--rate=100 --period=1s"
+				}
+			];
+		};
+	};
+
+	// KYC 信息人脸比对 token(bgw HTTP)，KYC 信息显示落地接口，KYC 前端使用
+	rpc GetKycInfoFaceAuthConfig (google.protobuf.Empty) returns (GetKycInfoFaceAuthConfigResult) {
+		option (bgw.v1.method_options) = {
+			path: "/v1/kyc/face_auth/kyc_info_config";
+			http_method: HTTP_METHOD_GET;
+			filters:[
+				{
+					name:FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER,
+					args: "--group=kyc_info_config --rate=20 --period=1m"
+				}
+			];
+		};
+	};
+
+	// KYC 信息人脸比对 token(bgw HTTP)，KYC 信息显示落地接口，KYC 前端使用
+	rpc GetKycInfoFaceAuthToken (google.protobuf.Empty) returns (GetFaceAuthTokenResult) {
+		option (bgw.v1.method_options) = {
+			path: "/v1/kyc/face_auth/kyc_info_token";
+			http_method: HTTP_METHOD_GET;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER,
+					args: "--group=kyc_info_token --rate=20 --period=1m"
+				}
+			];
+		};
+	};
+
+	// KYC 信息人脸比对获取(bgw HTTP)，KYC 信息显示落地接口，KYC 前端使用
+	rpc GetIdentity (GetIdentityRequest) returns (GetIdentityResult) {
+		option (bgw.v1.method_options) = {
+			path: "/v1/kyc/identity";
+			http_method: HTTP_METHOD_POST;
+			filters:[
+				{
+					name: FILTER_AUTH;
+				},
+				{
+					name: FILTER_BIZ_LIMITER,
+					args: "--group=identity --rate=20 --period=1m"
+				}
+			];
+		};
+	};
+
+}

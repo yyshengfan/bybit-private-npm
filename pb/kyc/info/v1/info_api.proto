@@ -1,0 +1,166 @@
+syntax = "proto3";
+package bybit.kyc.info.v1;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/info/v1";
+
+import "bybit/kyc/common/enums/kyc.proto";
+import "bybit/kyc/common/enums/transfer.proto";
+import "bybit/kyc/common/rpc.proto";
+import "bybit/kyc/info/v1/info_public_api.proto";
+
+service InfoAPI {
+	// 获取用户 KYC 某个类型图片
+	rpc GetVerifiedImage (GetVerifiedImageRequest) returns (GetVerifiedImageResponse);
+	rpc CheckKYCStatusByGroup (CheckKYCStatusByGroupRequest) returns (CheckKYCStatusByGroupResponse);
+	// kyc维护管理
+	rpc SetMaintainInfo (SetMaintainInfoRequest) returns (SetMaintainInfoResponse);
+	rpc GetMaintainInfo (GetMaintainInfoRequest) returns (GetMaintainInfoResponse);
+	// 查询个人及企业kyc信息
+	rpc CheckKYCStatus (CheckKYCStatusRequest) returns (CheckKYCStatusResponse);
+	// 查询个人 KYC 限制信息
+	rpc GetKYCLimitation (GetKYCLimitationRequest) returns (GetKYCLimitationResponse);
+	// 获取转移记录
+	rpc GetKycTransferList (GetKycTransferListRequest) returns (GetKycTransferListResponse);
+	// 获取转移追溯列表
+	rpc GetKycTransferTraceList (GetKycTransferTraceListRequest) returns (GetKycTransferTraceListResponse);
+	// 获取用户KYC服务商Token
+	rpc GetMemberKYCVendorToken(GetMemberKYCVendorTokenIn) returns (GetMemberKYCVendorTokenOut);
+	// 查询重脸记录
+	rpc GetDuplicateFaceGroupByMemberID(GetDuplicateFaceGroupByMemberIDRequest) returns (GetDuplicateFaceGroupByMemberIDResponse);
+
+}
+
+message GetVerifiedImageRequest {
+	int64 member_id = 1; // UID
+	bybit.kyc.common.enums.VerifiedImageType image_type = 2; // 图片类型
+}
+
+message GetVerifiedImageResponse {
+	string image_raw = 1; // 图片内容(base64 编码)
+}
+
+message CheckKYCStatusByGroupRequest {
+	repeated int64 member_ids = 1; // uid列表
+	bool require_kyb_check = 2; // 是否检查企业kyc
+}
+
+message CheckKYCStatusByGroupResponse {
+	bybit.kyc.common.enums.MemberKYCLevel level = 1; // kyc等级
+	bool kyb_passed = 2; // 是否通过企业kyc
+}
+
+// kyc维护管理
+message HomeMaintainInfo {
+	bybit.kyc.common.enums.MaintainStatus manual_switch = 1; // 人工干预开关
+	bybit.kyc.common.enums.MaintainStatus service_maintain = 2; // 服务维护提醒
+}
+
+message ProviderMaintainInfo {
+	bybit.kyc.common.enums.MaintainStatus manual_switch = 1;    // 人工干预开关
+	message ProviderMaintainItem {
+		bybit.kyc.common.enums.KYCProvider provider = 1;
+		bybit.kyc.common.enums.MaintainStatus maintain_switch = 2; // 维护提醒开关
+	}
+	repeated ProviderMaintainItem provider_maintain_items = 2; // 供应商维护信息
+}
+
+message SetMaintainInfoRequest {
+	int32 maintain_time = 1;    // 维护时间, 单位s
+	HomeMaintainInfo home_maintain_info = 2; // 首页维护信息
+	ProviderMaintainInfo provider_maintain_info = 3; // 供应商通道维护信息
+}
+
+message SetMaintainInfoResponse {
+}
+
+message GetMaintainInfoRequest {
+}
+
+message GetMaintainInfoResponse {
+	int32 maintain_time = 1;    // 维护时间
+	HomeMaintainInfo home_maintain_info = 2; // 首页维护信息
+	ProviderMaintainInfo provider_maintain_info = 3; // 供应商通道维护信息
+}
+
+message CheckKYCStatusRequest {
+	int64 member_id = 1; // uid列表
+}
+
+message CheckKYCStatusResponse {
+	bybit.kyc.common.enums.MemberKYCLevel level = 1; // 个人kyc等级
+	bool kyb_passed = 2; // 是否通过企业kyc
+}
+
+message GetKYCLimitationRequest {
+	int64 member_id = 1; // 用户ID
+}
+
+message GetKYCLimitationResponse {
+	bybit.kyc.common.enums.MemberKYCLimitation limitation      = 1; // 封禁状态
+	KYCLimitationInfo                          limitation_info = 2; // limitation关联的信息
+}
+
+// 获取转移列表
+message GetKycTransferListRequest {
+	int64 member_id = 1; // 用户ID
+	bybit.kyc.common.enums.TransferAction transfer_action = 2; // 转移动作
+	int64 transfer_time_begin = 3; // 转移开始时间戳
+	int64 transfer_time_end = 4; // 转移结束时间戳
+	int64 page = 5; // 页码
+	int64 page_size = 6; // 每页数
+}
+message GetKycTransferListResponse {
+	message Entity {
+		int64 src_member_id = 1; // 源用户id
+		int64 tar_member_id = 2; // 目标用户id
+		int64 transfer_time = 3; // 转移时间戳
+	}
+	repeated Entity items = 1; // 追溯转移列表
+	int64 page = 2;   // 页码
+	int64 total = 3;  // 总页数
+}
+
+// 获取转移追溯列表
+message GetKycTransferTraceListRequest {
+	int64 member_id = 1; // 用户ID
+}
+message GetKycTransferTraceListResponse {
+	message Entity {
+		int64 src_member_id = 1;
+		int64 tar_member_id = 2;
+	}
+	repeated Entity items = 1; // 追溯转移列表
+}
+
+// vendor share token
+message GetMemberKYCVendorTokenIn {
+	int64 member_id = 1; // bybit 用户ID
+	string for_client_id = 2; // easy_euro id
+	int64 Vendor = 3; // 服务商标识 1: sumsub 2: jumio 3: onfido
+}
+message GetMemberKYCVendorTokenOut {
+	bybit.kyc.common.Error  error = 1;
+	string token = 2; // token
+}
+
+// GetDuplicateFaceGroupByMemberIDRequest 查询重脸的接口请求入参
+message GetDuplicateFaceGroupByMemberIDRequest {
+	repeated int64 member_id = 1; // 支持多个Uid查询
+}
+
+message duplicated_face_member_ids {
+	repeated int64 member_ids = 1;  // 撞脸的uid, 为空表示无撞脸
+}
+
+message MapFieldEntry {
+	int64 member_id = 1;
+	duplicated_face_member_ids value = 2;
+}
+
+
+// GetDuplicateFaceGroupByMemberIDResponse 查询重脸的接口请求出参
+message GetDuplicateFaceGroupByMemberIDResponse {
+	bybit.kyc.common.Error  error = 1;
+	repeated MapFieldEntry duplicated_info = 2;
+	// map<int64, duplicated_face_member_ids> duplicated_info = 2; // key 为当前被查询的uid, duplicatedFaceMemberIDs中存放的是重脸的uid
+}

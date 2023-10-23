@@ -1,0 +1,20 @@
+syntax = "proto3";
+package bybit.kyc.common;
+
+option go_package = "code.bydev.io/cht/customer/kyc-stub.git/pkg/bybit/kyc/common";
+
+
+message Error {
+  int32 code = 1;   // 对应Http code及grpc的错误码（google.golang.org\grpc\codes\codes.go）
+  ErrorReason reason = 2;   // 业务错误码
+  string message = 3;       // 具体错误信息
+  map<string, string> metadata = 4;  // 扩展信息
+}
+
+enum ErrorReason {
+  // Do not use this default value.
+  ERROR_REASON_UNSPECIFIED = 0;
+  // Service is currently unavailable.
+  SERVICE_UNAVAILABLE = 1;
+}
+
